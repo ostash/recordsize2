@@ -74,12 +74,39 @@ static void processType(const tree type)
   deleteRecordInfo(ri);
 }
 
+static void processTemplate(const tree template)
+{
+  for (tree instance = DECL_TEMPLATE_INSTANTIATIONS(template); instance; instance = TREE_CHAIN(instance))
+  {
+    // instance is tree_list
+    // TREE_VALUE(instance) is instantiated/specialized record_type/function_decl
+
+    tree record_type = TREE_VALUE(instance);
+
+    // Ignore function templates
+    if (TREE_CODE(record_type) != RECORD_TYPE)
+      break;
+
+    // We want only fully instantiated class templates
+    if (!CLASSTYPE_TEMPLATE_INSTANTIATION(record_type))
+      continue;
+
+    // processType wants TYPE_DECL
+    processType(TYPE_NAME(TREE_VALUE(instance)));
+  }
+}
+
 static void processName(const tree name, struct NamespaceStats* stats)
 {
   if (!stats)
   {
-    if (TREE_CODE(name) == TYPE_DECL && !DECL_IS_BUILTIN(name))
-      processType(name);
+    if (!DECL_IS_BUILTIN(name))
+    {
+      if (TREE_CODE(name) == TYPE_DECL)
+        processType(name);
+      else if (TREE_CODE(name) == TEMPLATE_DECL)
+        processTemplate(name);
+    }
     return;
   }
 
@@ -109,6 +136,8 @@ static void processName(const tree name, struct NamespaceStats* stats)
     count[CNT_NAMESPACE]++;
     break;
   case TEMPLATE_DECL:
+    if (!isBuiltin)
+      processTemplate(name);
     count[CNT_TEMPLATE]++;
     break;
   default:
