@@ -33,12 +33,38 @@ struct NamespaceStats
   size_t builtinCount[CNT_LAST];
 };
 
+static void processType(const tree type)
+{
+  // Type could be (here, in level->names)
+  // 1) Just regular declaration of struct/union/enum
+  // 2) Typedef for 1)
+  // 3) Typedef which specializes template
+
+  // Case 1) should have DECL_ARTIFICIAL equal to true
+  // Cases 2) and 3) will have DECL_ARTIFICIAL equal to false
+
+  // We could simply ignore case 2) as type will be reported when we process
+  // original unaliased type (and that is good, because we should fix original,
+  // not alias).
+
+  // Case 3) should be ignored as well, because typedef itself doesn't
+  // instantiate template. Template instantiations should be tracked via
+  // TEMPLATE_DECLs.
+
+  if (!DECL_ARTIFICIAL(type))
+    return;
+
+  puts(cxx_printable_name(type, 0xff));
+}
+
 static void processName(const tree name, struct NamespaceStats* stats)
 {
   size_t* count = stats->namesCount;
-  if (DECL_IS_BUILTIN(name))
+  bool isBuiltin = DECL_IS_BUILTIN(name);
+  if (isBuiltin)
     count = stats->builtinCount;
 
+  // For record size calculations we are interested in TYPE_DECLs
   switch (TREE_CODE(name))
   {
   case FUNCTION_DECL:
@@ -51,6 +77,8 @@ static void processName(const tree name, struct NamespaceStats* stats)
     count[CNT_CONST]++;
     break;
   case TYPE_DECL:
+    if (!isBuiltin)
+      processType(name);
     count[CNT_TYPE]++;
     break;
   case NAMESPACE_DECL:
