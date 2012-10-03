@@ -2,6 +2,8 @@
 #include <cp/cp-tree.h>
 #include <langhooks.h>
 
+#include "RecordInfo.h"
+
 int plugin_is_GPL_compatible;
 static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin" };
 
@@ -64,7 +66,9 @@ static void processType(const tree type)
   if (!COMPLETE_TYPE_P(aggregate_type))
     return;
 
-  puts(cxx_printable_name(type, 0xff));
+  struct RecordInfo* ri = createRecordInfo(type, aggregate_type);
+  printRecordInfo(ri);
+  deleteRecordInfo(ri);
 }
 
 static void processName(const tree name, struct NamespaceStats* stats)
