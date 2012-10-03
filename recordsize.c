@@ -60,6 +60,10 @@ static void processType(const tree type)
   if (TREE_CODE(aggregate_type) != RECORD_TYPE)
     return;
 
+  // We want to ignore forward declaration as well (they're not complete)
+  if (!COMPLETE_TYPE_P(aggregate_type))
+    return;
+
   puts(cxx_printable_name(type, 0xff));
 }
 
