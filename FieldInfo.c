@@ -1,5 +1,7 @@
 #include "FieldInfo.h"
 
+#include <defaults.h>
+
 enum
 {
   FIELD_BASE = 0,
@@ -24,7 +26,9 @@ struct FieldInfo* createFieldInfo(const tree field_decl)
   fi->name = xstrdup(fieldName);
 
   fi->size = TREE_INT_CST_LOW(DECL_SIZE(field_decl));
-  fi->offset = TREE_INT_CST_LOW(DECL_FIELD_OFFSET(field_decl)) + TREE_INT_CST_LOW(DECL_FIELD_BIT_OFFSET(field_decl));
+  fi->offset = TREE_INT_CST_LOW(DECL_FIELD_OFFSET(field_decl)) * BITS_PER_UNIT;
+  fi->bitOffset = TREE_INT_CST_LOW(DECL_FIELD_BIT_OFFSET(field_decl));
+  fi->offsetAlign = DECL_OFFSET_ALIGN(field_decl);
   fi->align = DECL_ALIGN(field_decl);
 
   return fi;

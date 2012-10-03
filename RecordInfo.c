@@ -57,8 +57,8 @@ void printRecordInfo(struct RecordInfo* ri)
   if (ri->fieldCount == 0)
     return;
 
-  char* colNames[] = { "#", "Name", "Offset", "Size", "Align", "Base" ,"Bit" };
-  int colWidths[] = { 3, 32, 6, 6, 3, 1, 1};
+  char* colNames[] = { "#", "Name", "Offset", "BitOffset", "OffsetAlign", "Size", "Align", "Base" ,"Bit" };
+  int colWidths[] = { 3, 32, 6, 3, 3, 6, 3, 1, 1};
   const size_t colCount = sizeof(colNames) / sizeof(char*);
   for (size_t i = 2; i < colCount; i++)
   {
@@ -67,16 +67,16 @@ void printRecordInfo(struct RecordInfo* ri)
       colWidths[i] = len;
   }
 
-  printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
+  printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
     colWidths[2], colNames[2], colWidths[3], colNames[3], colWidths[4], colNames[4], colWidths[5], colNames[5],
-    colWidths[6], colNames[6]);
+    colWidths[6], colNames[6], colWidths[7], colNames[7], colWidths[8], colNames[8]);
 
   for (size_t i = 0; i < ri->fieldCount; i++)
   {
     struct FieldInfo* fi = ri->fields[i];
-    printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
-      fi->offset, colWidths[3], fi->size, colWidths[4], fi->align, colWidths[5], fi->isBase, colWidths[6],
-      fi->isBitField);
+    printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
+      fi->offset, colWidths[3], fi->bitOffset, colWidths[4], fi->offsetAlign, colWidths[5] ,fi->size, colWidths[6],
+      fi->align, colWidths[7], fi->isBase, colWidths[8], fi->isBitField);
   }
 
 }
