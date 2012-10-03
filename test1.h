@@ -68,7 +68,8 @@ namespace ns1 {
 
   namespace ns2
   {
-    
+    class FwdDeclClass;
+
     using namespace emptyns;
 
     class AnonUnionClass
