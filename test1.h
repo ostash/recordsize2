@@ -28,6 +28,8 @@ class BitField
   char f_char;
 };
 
+typedef NonOptimal CopyNonOptimal;
+
 void func()
 {
   TemplateClass<char> c_1;
