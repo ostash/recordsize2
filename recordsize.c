@@ -54,6 +54,12 @@ static void processType(const tree type)
   if (!DECL_ARTIFICIAL(type))
     return;
 
+  tree aggregate_type = TREE_TYPE(type);
+  // Here we got our aggregate with all members, but we are intersted only in
+  // records (structs, classes) and can ignore unions and enums.
+  if (TREE_CODE(aggregate_type) != RECORD_TYPE)
+    return;
+
   puts(cxx_printable_name(type, 0xff));
 }
 
