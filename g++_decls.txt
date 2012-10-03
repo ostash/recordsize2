@@ -1,0 +1,50 @@
+Here is list of possible *_DECL nodes in GCC AST:
+
+From tree.def:
+
+DEFTREECODE (FUNCTION_DECL, "function_decl", tcc_declaration, 0)
+DEFTREECODE (LABEL_DECL, "label_decl", tcc_declaration, 0)
+DEFTREECODE (FIELD_DECL, "field_decl", tcc_declaration, 0)
+DEFTREECODE (VAR_DECL, "var_decl", tcc_declaration, 0)
+DEFTREECODE (CONST_DECL, "const_decl", tcc_declaration, 0)
+DEFTREECODE (PARM_DECL, "parm_decl", tcc_declaration, 0)
+DEFTREECODE (TYPE_DECL, "type_decl", tcc_declaration, 0)
+DEFTREECODE (RESULT_DECL, "result_decl", tcc_declaration, 0)
+DEFTREECODE (DEBUG_EXPR_DECL, "debug_expr_decl", tcc_declaration, 0)
+DEFTREECODE (NAMESPACE_DECL, "namespace_decl", tcc_declaration, 0)
+DEFTREECODE (IMPORTED_DECL, "imported_decl", tcc_declaration, 0)
+DEFTREECODE (TRANSLATION_UNIT_DECL, "translation_unit_decl", tcc_declaration, 0)
+
+From cp/cp-tree.def:
+
+DEFTREECODE (TEMPLATE_DECL, "template_decl", tcc_declaration, 0)
+DEFTREECODE (USING_DECL, "using_decl", tcc_declaration, 0)
+
+In C++ AST everithing is organized in namespaces. There is a 'global_namespace'
+variable which is NAMESPACE_DECL. Namespace contents can be accessed using
+NAMESPACE_LEVEL macro. It will return pointer 'cp_binding_level' struct.
+Struct 'cp_binding_level' has various members for storing actual namespace
+content.
+
+FUNCTION_DECL		names
+LABEL_DECL		N/A (labels should be within functions)
+FIELD_DECL		N/A (fields should be within types)
+VAR_DECL		names
+CONST_DECL		names
+PARM_DECL		N/A (function parameters)
+TYPE_DECL		names
+RESULT_DECL		N/A (function result type)
+DEBUG_EXPR_DECL		N/A (debug temporary)
+NAMESPACE_DECL		names,namespaces (see below)
+IMPORTED_DECL		N/A (used for usings in code blocks)
+TRANSLATION_UNIT_DECL	N/A (fake decl to contain global_namespace)
+
+TEMPLATE_DECL		names
+USING_DECL		usings
+
+
+NAMESPACE_DECL which describes enclosed namespace is stored in 'namespaces'
+member.
+
+NAMESPACE_DECL which declares alias for some other namespace is stored in
+'names' member.
