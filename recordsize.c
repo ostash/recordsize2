@@ -7,6 +7,9 @@
 int plugin_is_GPL_compatible;
 static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin" };
 
+// Print namespace statistics
+static bool flag_print_ns = false;
+
 enum
 {
   CNT_FUNCTION,
@@ -73,6 +76,13 @@ static void processType(const tree type)
 
 static void processName(const tree name, struct NamespaceStats* stats)
 {
+  if (!stats)
+  {
+    if (TREE_CODE(name) == TYPE_DECL && !DECL_IS_BUILTIN(name))
+      processType(name);
+    return;
+  }
+
   size_t* count = stats->namesCount;
   bool isBuiltin = DECL_IS_BUILTIN(name);
   if (isBuiltin)
@@ -106,19 +116,8 @@ static void processName(const tree name, struct NamespaceStats* stats)
   }
 }
 
-static void traverseNamespace(const tree ns)
+static void printNamespaceStats(struct NamespaceStats* stats)
 {
-  if (!ns)
-    return;
-
-  struct cp_binding_level* level = NAMESPACE_LEVEL(ns);
-  printf("%s, contains %zu names\n", cxx_printable_name(ns, 0xff), level->names_size);
-
-  struct NamespaceStats* stats = xcalloc(1, sizeof(struct NamespaceStats));
-
-  for (tree name = level->names; name; name = TREE_CHAIN(name))
-    processName(name, stats);
-
   size_t totalCount = 0;
   puts(" Non-builtin names stats:");
   for (size_t i = 0; i < CNT_LAST; i++)
@@ -136,8 +135,30 @@ static void traverseNamespace(const tree ns)
     totalCount += stats->builtinCount[i];
   }
   printf(" Total builtin names: %zu\n", totalCount);
+}
 
-  free(stats);
+static void traverseNamespace(const tree ns)
+{
+  if (!ns)
+    return;
+
+  struct cp_binding_level* level = NAMESPACE_LEVEL(ns);
+  struct NamespaceStats* stats = 0;
+
+  if (flag_print_ns)
+  {
+    printf("%s, contains %zu names\n", cxx_printable_name(ns, 0xff), level->names_size);
+    stats =  xcalloc(1, sizeof(struct NamespaceStats));
+  }
+
+  for (tree name = level->names; name; name = TREE_CHAIN(name))
+    processName(name, stats);
+
+  if (flag_print_ns)
+  {
+    printNamespaceStats(stats);
+    free(stats);
+  }
 
   for (tree childNs = level->namespaces; childNs; childNs = TREE_CHAIN(childNs))
     traverseNamespace(childNs);
@@ -165,6 +186,15 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
   {
     fprintf(stderr, "Recordsize plugin supports only GNU C++ frontend\n");
     return 1;
+  }
+
+  if (info->argc)
+  {
+    for (int i = 0; i < info->argc; ++i)
+    {
+      if (strcmp(info->argv[i].key, "print-ns") == 0)
+        flag_print_ns = 1;
+    }
   }
 
   register_callback(info->base_name, PLUGIN_INFO, NULL, &recordsize_plugin_info);
