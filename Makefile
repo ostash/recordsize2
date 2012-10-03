@@ -6,3 +6,6 @@ recordsize:
 
 test:
 	g++ -fplugin=./recordsize.so test1.h
+
+dump:
+	g++ -fdump-tree-all test1.h
