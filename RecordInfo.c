@@ -14,7 +14,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   ri->align = TYPE_ALIGN(record_type);
 
   size_t fieldCapacity = 4;
-  ri->fields = xcalloc(fieldCapacity, sizeof(struct FieldInfo*));
+  ri->fields = xmalloc(fieldCapacity * sizeof(struct FieldInfo*));
 
   for (tree field = TYPE_FIELDS(record_type); field; field = TREE_CHAIN(field))
   {
@@ -27,9 +27,8 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     ri->fieldCount++;
     if (ri->fieldCount > fieldCapacity)
     {
-     ri->fields = xrealloc(ri->fields, fieldCapacity * 2 * sizeof(struct FieldInfo*));
-     memset(ri->fields + fieldCapacity, 0, fieldCapacity);
      fieldCapacity *= 2;
+     ri->fields = xrealloc(ri->fields, fieldCapacity * sizeof(struct FieldInfo*));
     }
 
     ri->fields[ri->fieldCount - 1] = fi;
