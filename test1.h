@@ -23,9 +23,11 @@ class NonOptimal
 
 class BitField
 {
-  int f_bit1 : 3;
-  int d_bit2 : 17;
-  char f_char;
+  short f_bit1 : 7;
+  char f_char1;
+  short f_bit2 : 12;
+  char f_bit3 : 7;
+  char f_char2;
 };
 
 typedef NonOptimal CopyNonOptimal;
