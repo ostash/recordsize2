@@ -30,10 +30,22 @@ class BitField
 
 typedef NonOptimal CopyNonOptimal;
 
+typedef TemplateClass<float> FloatTemplateClass;
+typedef TemplateClass<double> DoubleTemplateClass;
+
+template<> class TemplateClass<int>
+{
+  int f_sp_int1;
+  int f_sp_int2;
+};
+
+template class TemplateClass<short int>;
+
 void func()
 {
   TemplateClass<char> c_1;
   TemplateClass<void*> c_2;
+  DoubleTemplateClass c_3;
 }
 
 namespace ns1 {
