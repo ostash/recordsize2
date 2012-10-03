@@ -41,12 +41,23 @@ template<> class TemplateClass<int>
 
 template class TemplateClass<short int>;
 
+template <class T> T templateFunc(const T& value)
+{
+  return value+1;
+}
+
+template char templateFunc<char>(const char& value);
+
 void func()
 {
   TemplateClass<char> c_1;
   TemplateClass<void*> c_2;
   DoubleTemplateClass c_3;
+
+  int v;
+  templateFunc(v);
 }
+
 
 namespace ns1 {
 
