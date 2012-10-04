@@ -12,6 +12,7 @@ struct RecordInfo
   size_t size;
   size_t align;
   size_t fieldCount;
+  size_t firstField;
   bool hasBitFields;
   bool isInstance;
 };

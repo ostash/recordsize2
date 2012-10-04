@@ -13,6 +13,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   ri->size = TREE_INT_CST_LOW(TYPE_SIZE(record_type));
   ri->align = TYPE_ALIGN(record_type);
   ri->isInstance = CLASSTYPE_TEMPLATE_INSTANTIATION(record_type);
+  ri->firstField = SIZE_MAX;
 
   size_t fieldCapacity = 4;
   ri->fields = xmalloc(fieldCapacity * sizeof(struct FieldInfo*));
@@ -35,6 +36,9 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     ri->fields[ri->fieldCount - 1] = fi;
     if (fi->isBitField)
       ri->hasBitFields = true;
+
+    if (ri->firstField == SIZE_MAX && !fi->isBase)
+      ri->firstField = ri->fieldCount - 1;
   }
 
   return ri;
