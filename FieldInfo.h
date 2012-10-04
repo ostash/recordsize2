@@ -12,7 +12,8 @@ struct FieldInfo
   size_t bitOffset;
   size_t offsetAlign;
   size_t align;
-  bool isBase;
+  // Field is base class or vptr
+  bool isSpecial;
   bool isBitField;
 };
 

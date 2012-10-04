@@ -37,7 +37,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     if (fi->isBitField)
       ri->hasBitFields = true;
 
-    if (ri->firstField == SIZE_MAX && !fi->isBase)
+    if (ri->firstField == SIZE_MAX && !fi->isSpecial)
       ri->firstField = ri->fieldCount - 1;
   }
 
@@ -78,7 +78,7 @@ void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
   if (ri->fieldCount == 0)
     return;
 
-  char* colNames[] = { "#", "Name", "Offset", "BitOffset", "OffsetAlign", "Size", "Align", "Base" ,"Bit" };
+  char* colNames[] = { "#", "Name", "Offset", "BitOffset", "OffsetAlign", "Size", "Align", "Special" ,"Bit" };
   int colWidths[] = { 3, 32, 6, 3, 3, 6, 3, 1, 1};
   const size_t colCount = sizeof(colNames) / sizeof(char*);
   for (size_t i = 2; i < colCount; i++)
@@ -103,11 +103,11 @@ void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
     if (offsetDetails)
       printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
         fi->offset, colWidths[3], fi->bitOffset, colWidths[4], fi->offsetAlign, colWidths[5] ,fi->size, colWidths[6],
-        fi->align, colWidths[7], fi->isBase, colWidths[8], fi->isBitField);
+        fi->align, colWidths[7], fi->isSpecial, colWidths[8], fi->isBitField);
     else
       printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
         fi->offset + fi->bitOffset, colWidths[5] ,fi->size, colWidths[6],
-        fi->align, colWidths[7], fi->isBase, colWidths[8], fi->isBitField);
+        fi->align, colWidths[7], fi->isSpecial, colWidths[8], fi->isBitField);
   }
 
 }

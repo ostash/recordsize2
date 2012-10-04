@@ -12,11 +12,11 @@ static const char* fieldNames[] = {"base/vptr", "unnamed"};
 struct FieldInfo* createFieldInfo(const tree field_decl)
 {
   struct FieldInfo* fi = (struct FieldInfo*) xcalloc(1, sizeof(struct FieldInfo));
-  fi->isBase = DECL_ARTIFICIAL(field_decl);
+  fi->isSpecial = DECL_ARTIFICIAL(field_decl);
   fi->isBitField = DECL_BIT_FIELD(field_decl);
 
   const char* fieldName;
-  if (fi->isBase)
+  if (fi->isSpecial)
     fieldName = fieldNames[FIELD_BASE];
   else if (DECL_NAME(field_decl))
     fieldName = IDENTIFIER_POINTER(DECL_NAME(field_decl));
