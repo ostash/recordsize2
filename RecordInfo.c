@@ -37,7 +37,12 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     if (fi->isBitField)
       ri->hasBitFields = true;
 
-    if (ri->firstField == SIZE_MAX && !fi->isSpecial)
+    if (fi->isSpecial)
+    {
+      if (ri->firstField != SIZE_MAX)
+        ri->hasVirtualBase = true;
+    }
+    else if (ri->firstField == SIZE_MAX)
       ri->firstField = ri->fieldCount - 1;
   }
 
@@ -58,8 +63,8 @@ void deleteRecordInfo(struct RecordInfo* ri)
 
 void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
 {
-  char recordFlags[5] = "\0";
-  if (ri->hasBitFields || ri->isInstance)
+  char recordFlags[6] = "\0";
+  if (ri->hasBitFields || ri->isInstance || ri->hasVirtualBase)
   {
     char* rf = recordFlags;
     *rf++ = '[';
@@ -67,6 +72,8 @@ void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
       *rf++ = 'B';
     if (ri->isInstance)
       *rf++ = 'T';
+    if (ri->hasVirtualBase)
+      *rf++ = 'V';
     *rf++ = ']';
     *rf++ = ' ';
     *rf = 0;

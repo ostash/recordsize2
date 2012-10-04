@@ -15,6 +15,7 @@ struct RecordInfo
   size_t firstField;
   bool hasBitFields;
   bool isInstance;
+  bool hasVirtualBase;
 };
 
 struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type);
