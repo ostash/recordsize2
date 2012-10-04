@@ -9,6 +9,8 @@ static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin"
 
 // Print namespace statistics
 static bool flag_print_ns = false;
+// Print detailed fi
+static bool flag_print_offset_details = false;
 
 enum
 {
@@ -70,7 +72,7 @@ static void processType(const tree type)
     return;
 
   struct RecordInfo* ri = createRecordInfo(type, aggregate_type);
-  printRecordInfo(ri);
+  printRecordInfo(ri, flag_print_offset_details);
   deleteRecordInfo(ri);
 }
 
@@ -222,7 +224,9 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
     for (int i = 0; i < info->argc; ++i)
     {
       if (strcmp(info->argv[i].key, "print-ns") == 0)
-        flag_print_ns = 1;
+        flag_print_ns = true;
+      if (strcmp(info->argv[i].key, "print-offset-details") == 0)
+        flag_print_offset_details = true;
     }
   }
 

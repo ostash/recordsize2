@@ -49,7 +49,7 @@ void deleteRecordInfo(struct RecordInfo* ri)
   free(ri);
 }
 
-void printRecordInfo(struct RecordInfo* ri)
+void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
 {
   printf("Record %s at %s:%d; size %zu bits, align %zu bits, total %zu field(s)\n", ri->name,
     ri->fileName, ri->line, ri->size, ri->align, ri->fieldCount);
@@ -67,16 +67,26 @@ void printRecordInfo(struct RecordInfo* ri)
       colWidths[i] = len;
   }
 
-  printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
-    colWidths[2], colNames[2], colWidths[3], colNames[3], colWidths[4], colNames[4], colWidths[5], colNames[5],
-    colWidths[6], colNames[6], colWidths[7], colNames[7], colWidths[8], colNames[8]);
+  if (offsetDetails)
+    printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
+      colWidths[2], colNames[2], colWidths[3], colNames[3], colWidths[4], colNames[4], colWidths[5], colNames[5],
+      colWidths[6], colNames[6], colWidths[7], colNames[7], colWidths[8], colNames[8]);
+  else
+    printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
+      colWidths[2], colNames[2], colWidths[5], colNames[5], colWidths[6], colNames[6], colWidths[7], colNames[7],
+      colWidths[8], colNames[8]);
 
   for (size_t i = 0; i < ri->fieldCount; i++)
   {
     struct FieldInfo* fi = ri->fields[i];
-    printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
-      fi->offset, colWidths[3], fi->bitOffset, colWidths[4], fi->offsetAlign, colWidths[5] ,fi->size, colWidths[6],
-      fi->align, colWidths[7], fi->isBase, colWidths[8], fi->isBitField);
+    if (offsetDetails)
+      printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
+        fi->offset, colWidths[3], fi->bitOffset, colWidths[4], fi->offsetAlign, colWidths[5] ,fi->size, colWidths[6],
+        fi->align, colWidths[7], fi->isBase, colWidths[8], fi->isBitField);
+    else
+      printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
+        fi->offset + fi->bitOffset, colWidths[5] ,fi->size, colWidths[6],
+        fi->align, colWidths[7], fi->isBase, colWidths[8], fi->isBitField);
   }
 
 }
