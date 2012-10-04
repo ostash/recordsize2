@@ -12,6 +12,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   ri->line = DECL_SOURCE_LINE(type_decl);
   ri->size = TREE_INT_CST_LOW(TYPE_SIZE(record_type));
   ri->align = TYPE_ALIGN(record_type);
+  ri->isInstance = CLASSTYPE_TEMPLATE_INSTANTIATION(record_type);
 
   size_t fieldCapacity = 4;
   ri->fields = xmalloc(fieldCapacity * sizeof(struct FieldInfo*));
@@ -32,6 +33,8 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     }
 
     ri->fields[ri->fieldCount - 1] = fi;
+    if (fi->isBitField)
+      ri->hasBitFields = true;
   }
 
   return ri;
@@ -51,7 +54,21 @@ void deleteRecordInfo(struct RecordInfo* ri)
 
 void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
 {
-  printf("Record %s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", ri->name,
+  char recordFlags[5] = "\0";
+  if (ri->hasBitFields || ri->isInstance)
+  {
+    char* rf = recordFlags;
+    *rf++ = '[';
+    if (ri->hasBitFields)
+      *rf++ = 'B';
+    if (ri->isInstance)
+      *rf++ = 'T';
+    *rf++ = ']';
+    *rf++ = ' ';
+    *rf = 0;
+  }
+
+  printf("Record %s%s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", recordFlags, ri->name,
     ri->fileName, ri->line, ri->size, ri->align, ri->fieldCount);
 
   if (ri->fieldCount == 0)

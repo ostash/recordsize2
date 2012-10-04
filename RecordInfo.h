@@ -12,6 +12,8 @@ struct RecordInfo
   size_t size;
   size_t align;
   size_t fieldCount;
+  bool hasBitFields;
+  bool isInstance;
 };
 
 struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type);
