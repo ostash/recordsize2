@@ -7,7 +7,7 @@ enum
   FIELD_BASE = 0,
   FIELD_NONAME
 };
-static const char* fieldNames[] = {"base class", "unnamed"};
+static const char* fieldNames[] = {"base/vptr", "unnamed"};
 
 struct FieldInfo* createFieldInfo(const tree field_decl)
 {
