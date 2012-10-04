@@ -51,7 +51,7 @@ void deleteRecordInfo(struct RecordInfo* ri)
 
 void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
 {
-  printf("Record %s at %s:%d; size %zu bits, align %zu bits, total %zu field(s)\n", ri->name,
+  printf("Record %s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", ri->name,
     ri->fileName, ri->line, ri->size, ri->align, ri->fieldCount);
 
   if (ri->fieldCount == 0)
