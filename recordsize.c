@@ -78,17 +78,17 @@ static void processType(const tree type)
 
 static void processTemplate(const tree template)
 {
+  // We are not interested in anything except class templates
+  if (TREE_CODE(TREE_TYPE(template)) != RECORD_TYPE)
+   return;
+
   // TEMPLATE_DECL maintains chain of its instantiations
   for (tree instance = DECL_TEMPLATE_INSTANTIATIONS(template); instance; instance = TREE_CHAIN(instance))
   {
     // instance is tree_list
-    // TREE_VALUE(instance) is instantiated/specialized record_type/function_decl
+    // TREE_VALUE(instance) is instantiated/specialized record_type
 
     tree record_type = TREE_VALUE(instance);
-
-    // Ignore function templates
-    if (TREE_CODE(record_type) != RECORD_TYPE)
-      break;
 
     // Instance can be partial or specialization. Even if it full specialization,
     // we still want to process only instantiated (really used) classes.
@@ -96,7 +96,7 @@ static void processTemplate(const tree template)
       continue;
 
     // Now we are sure this is complete class template instantiation
-    processType(TYPE_NAME(TREE_VALUE(instance)));
+    processType(TYPE_NAME(record_type));
   }
 }
 
