@@ -18,6 +18,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   size_t fieldCapacity = 4;
   ri->fields = xmalloc(fieldCapacity * sizeof(struct FieldInfo*));
 
+  // Fields/variables/constants/functions are chained via TYPE_FIELDS of record
   for (tree field = TYPE_FIELDS(record_type); field; field = TREE_CHAIN(field))
   {
     // We're intersted in fields only
@@ -27,6 +28,8 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     struct FieldInfo* fi = createFieldInfo(field);
 
     ri->fieldCount++;
+
+    // Allocate more storage for fields if needed
     if (ri->fieldCount > fieldCapacity)
     {
      fieldCapacity *= 2;
@@ -34,11 +37,16 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     }
 
     ri->fields[ri->fieldCount - 1] = fi;
+
+    // Mark record as containing bit-fields
     if (fi->isBitField)
       ri->hasBitFields = true;
 
+    // Field is base/vptr
     if (fi->isSpecial)
     {
+      // If we encounter special field somewhere after regular fields
+      // it means class has virtual base.
       if (ri->firstField != SIZE_MAX)
         ri->hasVirtualBase = true;
     }
