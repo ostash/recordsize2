@@ -9,7 +9,7 @@ static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin"
 
 // Print namespace statistics
 static bool flag_print_ns = false;
-// Print detailed fi
+// Print field offset details (as in GCC)
 static bool flag_print_offset_details = false;
 
 enum
@@ -78,6 +78,7 @@ static void processType(const tree type)
 
 static void processTemplate(const tree template)
 {
+  // TEMPLATE_DECL maintains chain of its instantiations
   for (tree instance = DECL_TEMPLATE_INSTANTIATIONS(template); instance; instance = TREE_CHAIN(instance))
   {
     // instance is tree_list
@@ -89,17 +90,23 @@ static void processTemplate(const tree template)
     if (TREE_CODE(record_type) != RECORD_TYPE)
       break;
 
-    // We want only fully instantiated class templates
+    // Instance can be partial or specialization. Even if it full specialization,
+    // we still want to process only instantiated (really used) classes.
     if (!CLASSTYPE_TEMPLATE_INSTANTIATION(record_type))
       continue;
 
-    // processType wants TYPE_DECL
+    // Now we are sure this is complete class template instantiation
     processType(TYPE_NAME(TREE_VALUE(instance)));
   }
 }
 
 static void processName(const tree name, struct NamespaceStats* stats)
 {
+  // For record size calculations we are interested in TYPE_DECLs and
+  // TEMPLATE_DECLs
+  // We are also don't want to process builtin compiler types as we won't be
+  // able to modify them
+
   if (!stats)
   {
     if (!DECL_IS_BUILTIN(name))
@@ -117,7 +124,6 @@ static void processName(const tree name, struct NamespaceStats* stats)
   if (isBuiltin)
     count = stats->builtinCount;
 
-  // For record size calculations we are interested in TYPE_DECLs
   switch (TREE_CODE(name))
   {
   case FUNCTION_DECL:
@@ -173,6 +179,7 @@ static void traverseNamespace(const tree ns)
   if (!ns)
     return;
 
+  // Namespace content is stored in NAMESPACE_LEVEL field of NAMESPACE_DECL node
   struct cp_binding_level* level = NAMESPACE_LEVEL(ns);
   struct NamespaceStats* stats = 0;
 
@@ -182,6 +189,8 @@ static void traverseNamespace(const tree ns)
     stats =  xcalloc(1, sizeof(struct NamespaceStats));
   }
 
+  // 'names' is a chain of all *_DECLs within namespace (except for USING_DECL
+  // and NAMESPACE_DECL
   for (tree name = level->names; name; name = TREE_CHAIN(name))
     processName(name, stats);
 
@@ -191,6 +200,7 @@ static void traverseNamespace(const tree ns)
     free(stats);
   }
 
+  // Nested namespaces are chained via 'namespaces' field
   for (tree childNs = level->namespaces; childNs; childNs = TREE_CHAIN(childNs))
     traverseNamespace(childNs);
 
@@ -206,6 +216,8 @@ static void recordsize_override_gate(void *gcc_data, void *plugin_data)
 
   firstTime = false;
 
+  // GNU C++ stores root node of AST in variable 'global_namespace' which is
+  // NAMESPACE_DECL. It corresponds to top-level C++ namespace '::'
   traverseNamespace(global_namespace);
 }
 
