@@ -14,6 +14,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   ri->align = TYPE_ALIGN(record_type);
   ri->isInstance = CLASSTYPE_TEMPLATE_INSTANTIATION(record_type);
   ri->firstField = SIZE_MAX;
+  ri->estMinSize = SIZE_MAX;
 
   size_t fieldCapacity = 4;
   ri->fields = xmalloc(fieldCapacity * sizeof(struct FieldInfo*));
@@ -89,6 +90,8 @@ void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails)
 
   printf("Record %s%s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", recordFlags, ri->name,
     ri->fileName, ri->line, ri->size, ri->align, ri->fieldCount);
+  if (ri->estMinSize < ri->size)
+    printf("Warning: estimated minimal size is only %zu\n", ri->estMinSize);
 
   if (ri->fieldCount == 0)
     return;
@@ -125,4 +128,44 @@ void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails)
         fi->align, colWidths[7], fi->isSpecial, colWidths[8], fi->isBitField);
   }
 
+}
+
+void estimateMinRecordSize(struct RecordInfo* ri)
+{
+  // At the moment we can't handle some cases
+  if (ri->hasBitFields || ri->hasVirtualBase)
+    return;
+
+  // Handle records with bases only
+  if (ri->firstField == SIZE_MAX)
+  {
+    ri->estMinSize = ri->size;
+    return;
+  }
+
+  // We assume that field alignment is always power of two, so we can always reorder them
+  // to have record 'packed'
+  size_t fieldsSize = 0;
+  size_t maxFieldAlign = 0;
+  for (size_t i = ri->firstField; i < ri->fieldCount; i++)
+  {
+    fieldsSize += ri->fields[i]->size;
+    if (ri->fields[i]->align > maxFieldAlign)
+      maxFieldAlign = ri->fields[i]->align;
+  }
+
+  size_t endOfBases = 0;
+  // If we have bases there can be a need for additional padding between bases and first field
+  if (ri->firstField != 0)
+  {
+    endOfBases = ri->fields[ri->firstField - 1]->offset + ri->fields[ri->firstField - 1]->bitOffset +
+      ri->fields[ri->firstField - 1]->size;
+    if (endOfBases % maxFieldAlign)
+      endOfBases = (endOfBases / maxFieldAlign + 1) * maxFieldAlign;
+  }
+
+  ri->estMinSize = endOfBases + fieldsSize;
+  // Let us add final padding if needed
+  if (ri->estMinSize % ri->align)
+    ri->estMinSize = (ri->estMinSize / ri->align + 1) * ri->align;
 }

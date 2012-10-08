@@ -72,6 +72,7 @@ static void processType(const tree type)
     return;
 
   struct RecordInfo* ri = createRecordInfo(type, aggregate_type);
+  estimateMinRecordSize(ri);
   printRecordInfo(ri, flag_print_offset_details);
   deleteRecordInfo(ri);
 }

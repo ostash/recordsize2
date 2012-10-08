@@ -14,6 +14,8 @@ struct RecordInfo
   size_t fieldCount;
   // Index of first non-special field
   size_t firstField;
+  // Estimated minimal size
+  size_t estMinSize;
   bool hasBitFields;
   bool isInstance;
   bool hasVirtualBase;
@@ -22,5 +24,7 @@ struct RecordInfo
 struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type);
 void deleteRecordInfo(struct RecordInfo* ri);
 void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails);
+
+void estimateMinRecordSize(struct RecordInfo* ri);
 
 #endif
