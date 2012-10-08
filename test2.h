@@ -48,3 +48,18 @@ struct VD2 : virtual BaseChar {
 struct VD : VD1, VD2 {
   float f_float;
 };
+
+class EmptyBase1{};
+class EmptyBase2{};
+
+class DEB1 : EmptyBase1 {
+  int f_int; };
+
+class DEB2 : EmptyBase2 {
+  char f_char; };
+
+class DEB12_1 : EmptyBase1, BaseChar, EmptyBase2 {
+  int f_int;
+};
+
+class NoFields: BaseChar, BaseInt {};
