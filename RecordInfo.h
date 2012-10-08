@@ -21,6 +21,6 @@ struct RecordInfo
 
 struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type);
 void deleteRecordInfo(struct RecordInfo* ri);
-void printRecordInfo(struct RecordInfo* ri, bool offsetDetails);
+void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails);
 
 #endif

@@ -69,7 +69,7 @@ void deleteRecordInfo(struct RecordInfo* ri)
   free(ri);
 }
 
-void printRecordInfo(struct RecordInfo* ri, bool offsetDetails)
+void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails)
 {
   char recordFlags[6] = "\0";
   if (ri->hasBitFields || ri->isInstance || ri->hasVirtualBase)
