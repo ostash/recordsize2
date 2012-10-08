@@ -70,7 +70,7 @@ void deleteRecordInfo(struct RecordInfo* ri)
   free(ri);
 }
 
-void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails)
+void printRecordInfo(const struct RecordInfo* ri, bool printLayout, bool offsetDetails)
 {
   char recordFlags[6] = "\0";
   if (ri->hasBitFields || ri->isInstance || ri->hasVirtualBase)
@@ -90,10 +90,9 @@ void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails)
 
   printf("Record %s%s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", recordFlags, ri->name,
     ri->fileName, ri->line, ri->size, ri->align, ri->fieldCount);
-  if (ri->estMinSize < ri->size)
-    printf("Warning: estimated minimal size is only %zu\n", ri->estMinSize);
+  printf("Warning: estimated minimal size is only %zu\n", ri->estMinSize);
 
-  if (ri->fieldCount == 0)
+  if (!printLayout || ri->fieldCount == 0)
     return;
 
   char* colNames[] = { "#", "Name", "Offset", "BitOffset", "OffsetAlign", "Size", "Align", "Special" ,"Bit" };
