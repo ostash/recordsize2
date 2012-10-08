@@ -18,8 +18,8 @@ You can tweak plugin behavior using command line switches:
 -fplugin-arg-recordsize-print-layout - print record layout. That allows to see
   which sizes/offsets/alignments are used by each field of reported records.
 
--fplugin-arg-recordsize-print-layout-all - print record layout for all records
-  we process.
+-fplugin-arg-recordsize-print-all - print record layout for all (even not
+  missized) records we process.
 
 -fplugin-arg-recordsize-dumpfile=filename - dump record information to given
   file. Dump file is appended with new record information on each next GCC

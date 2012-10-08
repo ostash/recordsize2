@@ -11,6 +11,8 @@ static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin"
 static bool flag_process_templates = false;
 // Print record layout
 static bool flag_print_layout = false;
+// Print all records with layout
+static bool flag_print_all = false;
 // Print field offset details (as in GCC)
 static bool flag_print_offset_details = false;
 
@@ -71,7 +73,7 @@ static void processType(const tree type)
     struct RecordInfo* ri = createRecordInfo(type, aggregate_type);
     estimateMinRecordSize(ri);
 
-    if (ri->estMinSize < ri->size)
+    if (flag_print_all || ri->estMinSize < ri->size)
       printRecordInfo(ri, flag_print_layout, flag_print_offset_details);
 
     recordCount++;
@@ -189,6 +191,11 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
         flag_process_templates = true;
       if (strcmp(info->argv[i].key, "print-layout") == 0)
         flag_print_layout = true;
+      if (strcmp(info->argv[i].key, "print-all") == 0)
+      {
+        flag_print_layout = true;
+        flag_print_all = true;
+      }
       if (strcmp(info->argv[i].key, "print-offset-details") == 0)
         flag_print_offset_details = true;
     }
