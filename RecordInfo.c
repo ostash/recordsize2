@@ -70,7 +70,7 @@ void deleteRecordInfo(struct RecordInfo* ri)
   free(ri);
 }
 
-void printRecordInfo(const struct RecordInfo* ri, bool printLayout, bool offsetDetails)
+void printRecordInfo(const struct RecordInfo* ri, bool printLayout)
 {
   char recordFlags[6] = "\0";
   if (ri->hasBitFields || ri->isInstance || ri->hasVirtualBase)
@@ -97,36 +97,26 @@ void printRecordInfo(const struct RecordInfo* ri, bool printLayout, bool offsetD
   if (!printLayout || ri->fieldCount == 0)
     return;
 
-  char* colNames[] = { "#", "Name", "Offset", "BitOffset", "OffsetAlign", "Size", "Align", "Special" ,"Bit" };
-  int colWidths[] = { 3, 32, 6, 3, 3, 6, 3, 1, 1};
+  char* colNames[] = { "#", "Name", "Offset", "Size", "Align", "Special" ,"Bit" };
+  int colWidths[] = { 3, 32, 6, 6, 3, 1, 1};
   const size_t colCount = sizeof(colNames) / sizeof(char*);
-  for (size_t i = 2; i < colCount; i++)
+  for (size_t i = 1; i < colCount; i++)
   {
     int len = strlen(colNames[i]);
     if (len > colWidths[i])
       colWidths[i] = len;
   }
 
-  if (offsetDetails)
-    printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
-      colWidths[2], colNames[2], colWidths[3], colNames[3], colWidths[4], colNames[4], colWidths[5], colNames[5],
-      colWidths[6], colNames[6], colWidths[7], colNames[7], colWidths[8], colNames[8]);
-  else
-    printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
-      colWidths[2], colNames[2], colWidths[5], colNames[5], colWidths[6], colNames[6], colWidths[7], colNames[7],
-      colWidths[8], colNames[8]);
+  printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
+    colWidths[2], colNames[2], colWidths[3], colNames[3], colWidths[4], colNames[4], colWidths[5], colNames[5],
+    colWidths[6], colNames[6]);
 
   for (size_t i = 0; i < ri->fieldCount; i++)
   {
     struct FieldInfo* fi = ri->fields[i];
-    if (offsetDetails)
-      printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
-        fi->offset, colWidths[3], fi->bitOffset, colWidths[4], fi->offsetAlign, colWidths[5] ,fi->size, colWidths[6],
-        fi->align, colWidths[7], fi->isSpecial, colWidths[8], fi->isBitField);
-    else
-      printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
-        fi->offset + fi->bitOffset, colWidths[5] ,fi->size, colWidths[6],
-        fi->align, colWidths[7], fi->isSpecial, colWidths[8], fi->isBitField);
+    printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
+      fi->offset, colWidths[3] ,fi->size, colWidths[4], fi->align, colWidths[5], fi->isSpecial,
+      colWidths[6], fi->isBitField);
   }
 
 }
@@ -159,8 +149,7 @@ void estimateMinRecordSize(struct RecordInfo* ri)
   // If we have bases there can be a need for additional padding between bases and first field
   if (ri->firstField != 0)
   {
-    endOfBases = ri->fields[ri->firstField - 1]->offset + ri->fields[ri->firstField - 1]->bitOffset +
-      ri->fields[ri->firstField - 1]->size;
+    endOfBases = ri->fields[ri->firstField - 1]->offset + ri->fields[ri->firstField - 1]->size;
     if (endOfBases % maxFieldAlign)
       endOfBases = (endOfBases / maxFieldAlign + 1) * maxFieldAlign;
   }

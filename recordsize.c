@@ -13,8 +13,6 @@ static bool flag_process_templates = false;
 static bool flag_print_layout = false;
 // Print all records with layout
 static bool flag_print_all = false;
-// Print field offset details (as in GCC)
-static bool flag_print_offset_details = false;
 
 static struct RecordInfo** records;
 static size_t recordCount = 0;
@@ -74,7 +72,7 @@ static void processType(const tree type)
     estimateMinRecordSize(ri);
 
     if (flag_print_all || ri->estMinSize < ri->size)
-      printRecordInfo(ri, flag_print_layout, flag_print_offset_details);
+      printRecordInfo(ri, flag_print_layout);
 
     recordCount++;
     if (recordCount > recordCapacity)
@@ -196,8 +194,6 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
         flag_print_layout = true;
         flag_print_all = true;
       }
-      if (strcmp(info->argv[i].key, "print-offset-details") == 0)
-        flag_print_offset_details = true;
     }
   }
 

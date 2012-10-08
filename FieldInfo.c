@@ -28,13 +28,11 @@ struct FieldInfo* createFieldInfo(const tree field_decl)
   fi->size = TREE_INT_CST_LOW(DECL_SIZE(field_decl));
 
   // Offset calculation is a little bit wierd. According to GCC docs:
-
-  // "... position, counting in bytes,"
-  fi->offset = TREE_INT_CST_LOW(DECL_FIELD_OFFSET(field_decl)) * BITS_PER_UNIT;
-  // "of the DECL_OFFSET_ALIGN-bit sized word ..."
-  fi->offsetAlign = DECL_OFFSET_ALIGN(field_decl);
-  // ".. DECL_FIELD_BIT_OFFSET is the bit offset of the first bit of the field within this word"
-  fi->bitOffset = TREE_INT_CST_LOW(DECL_FIELD_BIT_OFFSET(field_decl));
+  // "... DECL_FIELD_OFFSET is position, counting in bytes, of the
+  // DECL_OFFSET_ALIGN-bit sized word ..." and ".. DECL_FIELD_BIT_OFFSET is the
+  // bit offset of the first bit of the field within this word"
+  fi->offset = TREE_INT_CST_LOW(DECL_FIELD_OFFSET(field_decl)) * BITS_PER_UNIT +
+    TREE_INT_CST_LOW(DECL_FIELD_BIT_OFFSET(field_decl));
 
   fi->align = DECL_ALIGN(field_decl);
 
@@ -55,8 +53,6 @@ void saveFieldInfo(FILE* file, const struct FieldInfo* fi)
 
   fwrite(&fi->size, sizeof(fi->size), 1, file);
   fwrite(&fi->offset, sizeof(fi->offset), 1, file);
-  fwrite(&fi->bitOffset, sizeof(fi->bitOffset), 1, file);
-  fwrite(&fi->offsetAlign, sizeof(fi->offsetAlign), 1, file);
   fwrite(&fi->align, sizeof(fi->align), 1, file);
 
   fwrite(&fi->isSpecial, sizeof(fi->isSpecial), 1, file);
@@ -74,8 +70,6 @@ struct FieldInfo* loadFieldInfo(FILE* file)
 
   fread(&fi->size, sizeof(fi->size), 1, file);
   fread(&fi->offset, sizeof(fi->offset), 1, file);
-  fread(&fi->bitOffset, sizeof(fi->bitOffset), 1, file);
-  fread(&fi->offsetAlign, sizeof(fi->offsetAlign), 1, file);
   fread(&fi->align, sizeof(fi->align), 1, file);
 
   fread(&fi->isSpecial, sizeof(fi->isSpecial), 1, file);
