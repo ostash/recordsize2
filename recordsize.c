@@ -7,43 +7,12 @@
 int plugin_is_GPL_compatible;
 static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin" };
 
-// Print namespace statistics
-static bool flag_print_ns = false;
 // Print field offset details (as in GCC)
 static bool flag_print_offset_details = false;
-
 
 static struct RecordInfo** records;
 static size_t recordCount = 0;
 static size_t recordCapacity = 256;
-
-enum
-{
-  CNT_FUNCTION,
-  CNT_VAR,
-  CNT_CONST,
-  CNT_TYPE,
-  CNT_NAMESPACE,
-  CNT_TEMPLATE,
-  CNT_OTHER,
-  CNT_LAST
-};
-
-static const char* declNames[] = {
-  "Functions",
-  "Variables",
-  "Constans",
-  "Types",
-  "Namespaces",
-  "Templates",
-  "Other",
-   };
-
-struct NamespaceStats
-{
-  size_t namesCount[CNT_LAST];
-  size_t builtinCount[CNT_LAST];
-};
 
 static void deleteRecords()
 {
@@ -134,78 +103,25 @@ static void processTemplate(const tree template)
   }
 }
 
-static void processName(const tree name, struct NamespaceStats* stats)
+static void processName(const tree name)
 {
   // For record size calculations we are interested in TYPE_DECLs and
   // TEMPLATE_DECLs
   // We are also don't want to process builtin compiler types as we won't be
   // able to modify them
-
-  if (!stats)
-  {
-    if (!DECL_IS_BUILTIN(name))
-    {
-      if (TREE_CODE(name) == TYPE_DECL)
-        processType(name);
-      else if (TREE_CODE(name) == TEMPLATE_DECL)
-        processTemplate(name);
-    }
+  if (DECL_IS_BUILTIN(name))
     return;
-  }
-
-  size_t* count = stats->namesCount;
-  bool isBuiltin = DECL_IS_BUILTIN(name);
-  if (isBuiltin)
-    count = stats->builtinCount;
 
   switch (TREE_CODE(name))
   {
-  case FUNCTION_DECL:
-    count[CNT_FUNCTION]++;
-    break;
-  case VAR_DECL:
-    count[CNT_VAR]++;
-    break;
-  case CONST_DECL:
-    count[CNT_CONST]++;
-    break;
   case TYPE_DECL:
-    if (!isBuiltin)
-      processType(name);
-    count[CNT_TYPE]++;
-    break;
-  case NAMESPACE_DECL:
-    count[CNT_NAMESPACE]++;
+    processType(name);
     break;
   case TEMPLATE_DECL:
-    if (!isBuiltin)
-      processTemplate(name);
-    count[CNT_TEMPLATE]++;
+    processTemplate(name);
     break;
-  default:
-    count[CNT_OTHER]++;
+  default:;
   }
-}
-
-static void printNamespaceStats(struct NamespaceStats* stats)
-{
-  size_t totalCount = 0;
-  puts(" Non-builtin names stats:");
-  for (size_t i = 0; i < CNT_LAST; i++)
-  {
-    printf("  %-16s%7zu\n", declNames[i], stats->namesCount[i]);
-    totalCount += stats->namesCount[i];
-  }
-  printf(" Total non-builtin names: %zu\n", totalCount);
-
-  totalCount = 0;
-  puts(" Builtin names stats:");
-  for (size_t i = 0; i < CNT_LAST; i++)
-  {
-    printf("  %-16s%7zu\n", declNames[i], stats->builtinCount[i]);
-    totalCount += stats->builtinCount[i];
-  }
-  printf(" Total builtin names: %zu\n", totalCount);
 }
 
 static void traverseNamespace(const tree ns)
@@ -215,24 +131,11 @@ static void traverseNamespace(const tree ns)
 
   // Namespace content is stored in NAMESPACE_LEVEL field of NAMESPACE_DECL node
   struct cp_binding_level* level = NAMESPACE_LEVEL(ns);
-  struct NamespaceStats* stats = 0;
-
-  if (flag_print_ns)
-  {
-    printf("%s, contains %zu names\n", cxx_printable_name(ns, 0xff), level->names_size);
-    stats =  xcalloc(1, sizeof(struct NamespaceStats));
-  }
 
   // 'names' is a chain of all *_DECLs within namespace (except for USING_DECL
   // and NAMESPACE_DECL
   for (tree name = level->names; name; name = TREE_CHAIN(name))
-    processName(name, stats);
-
-  if (flag_print_ns)
-  {
-    printNamespaceStats(stats);
-    free(stats);
-  }
+    processName(name);
 
   // Nested namespaces are chained via 'namespaces' field
   for (tree childNs = level->namespaces; childNs; childNs = TREE_CHAIN(childNs))
@@ -275,8 +178,6 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
   {
     for (int i = 0; i < info->argc; ++i)
     {
-      if (strcmp(info->argv[i].key, "print-ns") == 0)
-        flag_print_ns = true;
       if (strcmp(info->argv[i].key, "print-offset-details") == 0)
         flag_print_offset_details = true;
     }
