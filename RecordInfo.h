@@ -27,4 +27,7 @@ void printRecordInfo(const struct RecordInfo* ri, bool offsetDetails);
 
 void estimateMinRecordSize(struct RecordInfo* ri);
 
+void saveRecordInfo(FILE* file, const struct RecordInfo* ri);
+struct RecordInfo* loadRecordInfo(FILE* file);
+
 #endif

@@ -46,3 +46,40 @@ void deleteFieldInfo(struct FieldInfo* fi)
   free(fi->name);
   free(fi);
 }
+
+void saveFieldInfo(FILE* file, const struct FieldInfo* fi)
+{
+  size_t len = strlen(fi->name);
+  fwrite(&len, sizeof(len), 1, file);
+  fwrite(fi->name, len + 1, 1, file);
+
+  fwrite(&fi->size, sizeof(fi->size), 1, file);
+  fwrite(&fi->offset, sizeof(fi->offset), 1, file);
+  fwrite(&fi->bitOffset, sizeof(fi->bitOffset), 1, file);
+  fwrite(&fi->offsetAlign, sizeof(fi->offsetAlign), 1, file);
+  fwrite(&fi->align, sizeof(fi->align), 1, file);
+
+  fwrite(&fi->isSpecial, sizeof(fi->isSpecial), 1, file);
+  fwrite(&fi->isBitField, sizeof(fi->isBitField), 1, file);
+}
+
+struct FieldInfo* loadFieldInfo(FILE* file)
+{
+  struct FieldInfo* fi = xmalloc(sizeof(struct FieldInfo));
+
+  size_t len;
+  fread(&len, sizeof(len), 1, file);
+  fi->name = xmalloc(len + 1);
+  fread(fi->name, len + 1, 1, file);
+
+  fread(&fi->size, sizeof(fi->size), 1, file);
+  fread(&fi->offset, sizeof(fi->offset), 1, file);
+  fread(&fi->bitOffset, sizeof(fi->bitOffset), 1, file);
+  fread(&fi->offsetAlign, sizeof(fi->offsetAlign), 1, file);
+  fread(&fi->align, sizeof(fi->align), 1, file);
+
+  fread(&fi->isSpecial, sizeof(fi->isSpecial), 1, file);
+  fread(&fi->isBitField, sizeof(fi->isBitField), 1, file);
+
+  return fi;
+}

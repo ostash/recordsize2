@@ -169,3 +169,63 @@ void estimateMinRecordSize(struct RecordInfo* ri)
   if (ri->estMinSize % ri->align)
     ri->estMinSize = (ri->estMinSize / ri->align + 1) * ri->align;
 }
+
+void saveRecordInfo(FILE* file, const struct RecordInfo* ri)
+{
+  fwrite(&ri->fieldCount, sizeof(ri->fieldCount), 1, file);
+  for (size_t i = 0; i < ri->fieldCount; i++)
+    saveFieldInfo(file, ri->fields[i]);
+
+  size_t len = strlen(ri->name);
+  fwrite(&len, sizeof(len), 1, file);
+  fwrite(ri->name, len + 1, 1, file);
+
+  len = strlen(ri->fileName);
+  fwrite(&len, sizeof(len), 1, file);
+  fwrite(ri->fileName, len + 1, 1, file);
+
+  fwrite(&ri->line, sizeof(ri->line), 1, file);
+  fwrite(&ri->size, sizeof(ri->size), 1, file);
+  fwrite(&ri->align, sizeof(ri->align), 1, file);
+
+  fwrite(&ri->firstField, sizeof(ri->firstField), 1, file);
+
+  fwrite(&ri->estMinSize, sizeof(ri->estMinSize), 1, file);
+
+  fwrite(&ri->hasBitFields, sizeof(ri->hasBitFields), 1, file);
+  fwrite(&ri->isInstance, sizeof(ri->isInstance), 1, file);
+  fwrite(&ri->hasVirtualBase, sizeof(ri->hasVirtualBase), 1, file);
+}
+
+struct RecordInfo* loadRecordInfo(FILE* file)
+{
+  struct RecordInfo* ri = (struct RecordInfo*) xcalloc(1, sizeof(struct RecordInfo));
+
+  fread(&ri->fieldCount, sizeof(ri->fieldCount), 1, file);
+  ri->fields = xmalloc(ri->fieldCount * sizeof(struct FieldInfo*));
+  for (size_t i = 0; i < ri->fieldCount; i++)
+    ri->fields[i] = loadFieldInfo(file);
+
+  size_t len;
+  fread(&len, sizeof(len), 1, file);
+  ri->name = xmalloc(len + 1);
+  fread(ri->name, len + 1, 1, file);
+
+  fread(&len, sizeof(len), 1, file);
+  ri->fileName = xmalloc(len + 1);
+  fread(ri->fileName, len + 1, 1, file);
+
+  fread(&ri->line, sizeof(ri->line), 1, file);
+  fread(&ri->size, sizeof(ri->size), 1, file);
+  fread(&ri->align, sizeof(ri->align), 1, file);
+
+  fread(&ri->firstField, sizeof(ri->firstField), 1, file);
+
+  fread(&ri->estMinSize, sizeof(ri->estMinSize), 1, file);
+
+  fread(&ri->hasBitFields, sizeof(ri->hasBitFields), 1, file);
+  fread(&ri->isInstance, sizeof(ri->isInstance), 1, file);
+  fread(&ri->hasVirtualBase, sizeof(ri->hasVirtualBase), 1, file);
+
+  return ri;
+}
