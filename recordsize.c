@@ -7,6 +7,8 @@
 int plugin_is_GPL_compatible;
 static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin" };
 
+// Process class templates instantiations
+static bool flag_process_templates = false;
 // Print field offset details (as in GCC)
 static bool flag_print_offset_details = false;
 
@@ -118,7 +120,8 @@ static void processName(const tree name)
     processType(name);
     break;
   case TEMPLATE_DECL:
-    processTemplate(name);
+    if (flag_process_templates)
+      processTemplate(name);
     break;
   default:;
   }
@@ -178,6 +181,8 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
   {
     for (int i = 0; i < info->argc; ++i)
     {
+      if (strcmp(info->argv[i].key, "process-templates") == 0)
+        flag_process_templates = true;
       if (strcmp(info->argv[i].key, "print-offset-details") == 0)
         flag_print_offset_details = true;
     }
