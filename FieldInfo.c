@@ -63,17 +63,35 @@ struct FieldInfo* loadFieldInfo(FILE* file)
 {
   struct FieldInfo* fi = xmalloc(sizeof(struct FieldInfo));
 
+  // Read field name length
   size_t len;
-  fread(&len, sizeof(len), 1, file);
+  if (fread(&len, sizeof(len), 1, file) != 1)
+    goto out_fi;
   fi->name = xmalloc(len + 1);
-  fread(fi->name, len + 1, 1, file);
-
-  fread(&fi->size, sizeof(fi->size), 1, file);
-  fread(&fi->offset, sizeof(fi->offset), 1, file);
-  fread(&fi->align, sizeof(fi->align), 1, file);
-
-  fread(&fi->isSpecial, sizeof(fi->isSpecial), 1, file);
-  fread(&fi->isBitField, sizeof(fi->isBitField), 1, file);
+  // Read field name
+  if (fread(fi->name, len + 1, 1, file) != 1 || fi->name[len] != 0)
+    goto out_name;
+  // Read field size
+  if (fread(&fi->size, sizeof(fi->size), 1, file) != 1)
+    goto out_name;
+  // Read field offset
+  if (fread(&fi->offset, sizeof(fi->offset), 1, file) != 1)
+    goto out_name;
+  // Read field align
+  if (fread(&fi->align, sizeof(fi->align), 1, file) != 1)
+    goto out_name;
+  // Read whether field is base/vptr
+  if (fread(&fi->isSpecial, sizeof(fi->isSpecial), 1, file) != 1)
+    goto out_name;
+  // Read where field is bit-field
+  if (fread(&fi->isBitField, sizeof(fi->isBitField), 1, file) != 1)
+    goto out_name;
 
   return fi;
+
+out_name:
+  free(fi->name);
+out_fi:
+  free(fi);
+  return 0;
 }

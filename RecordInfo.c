@@ -191,31 +191,66 @@ struct RecordInfo* loadRecordInfo(FILE* file)
 {
   struct RecordInfo* ri = (struct RecordInfo*) xcalloc(1, sizeof(struct RecordInfo));
 
-  fread(&ri->fieldCount, sizeof(ri->fieldCount), 1, file);
-  ri->fields = xmalloc(ri->fieldCount * sizeof(struct FieldInfo*));
+  // Read field count
+  if (fread(&ri->fieldCount, sizeof(ri->fieldCount), 1, file) != 1)
+    goto out_ri;
+  // Read fields
+  ri->fields = xcalloc(ri->fieldCount, sizeof(struct FieldInfo*));
   for (size_t i = 0; i < ri->fieldCount; i++)
-    ri->fields[i] = loadFieldInfo(file);
-
+    if ((ri->fields[i] = loadFieldInfo(file)) == 0)
+      goto out_fields;
+  // Read record name length
   size_t len;
-  fread(&len, sizeof(len), 1, file);
+  if (fread(&len, sizeof(len), 1, file) != 1)
+    goto out_fields;
   ri->name = xmalloc(len + 1);
-  fread(ri->name, len + 1, 1, file);
-
-  fread(&len, sizeof(len), 1, file);
+  // Read record name
+  if (fread(ri->name, len + 1, 1, file) != 1 || ri->name[len] != 0)
+    goto out_name;
+  // Read source file name length
+  if (fread(&len, sizeof(len), 1, file) != 1)
+    goto out_name;
   ri->fileName = xmalloc(len + 1);
-  fread(ri->fileName, len + 1, 1, file);
-
-  fread(&ri->line, sizeof(ri->line), 1, file);
-  fread(&ri->size, sizeof(ri->size), 1, file);
-  fread(&ri->align, sizeof(ri->align), 1, file);
-
-  fread(&ri->firstField, sizeof(ri->firstField), 1, file);
-
-  fread(&ri->estMinSize, sizeof(ri->estMinSize), 1, file);
-
-  fread(&ri->hasBitFields, sizeof(ri->hasBitFields), 1, file);
-  fread(&ri->isInstance, sizeof(ri->isInstance), 1, file);
-  fread(&ri->hasVirtualBase, sizeof(ri->hasVirtualBase), 1, file);
+  // Read source file name
+  if (fread(ri->fileName, len + 1, 1, file) != 1 || ri->fileName[len] != 0)
+    goto out_fileName;
+  // Read source line
+  if (fread(&ri->line, sizeof(ri->line), 1, file) != 1)
+    goto out_fileName;
+  // Read record size
+  if (fread(&ri->size, sizeof(ri->size), 1, file) != 1)
+    goto out_fileName;
+  // Read record align
+  if (fread(&ri->align, sizeof(ri->align), 1, file) != 1)
+    goto out_fileName;
+  // Read first non-base/vptr field index
+  if (fread(&ri->firstField, sizeof(ri->firstField), 1, file) != 1)
+    goto out_fileName;
+  // Read estimated minimal size
+  if (fread(&ri->estMinSize, sizeof(ri->estMinSize), 1, file) != 1)
+    goto out_fileName;
+  // Read whether record contains bit-fields
+  if (fread(&ri->hasBitFields, sizeof(ri->hasBitFields), 1, file) != 1)
+    goto out_fileName;
+  // Read whether record is template instance
+  if (fread(&ri->isInstance, sizeof(ri->isInstance), 1, file) != 1)
+    goto out_fileName;
+  // Read whether record has virtual base(s)
+  if (fread(&ri->hasVirtualBase, sizeof(ri->hasVirtualBase), 1, file) != 1)
+    goto out_fileName;
 
   return ri;
+
+out_fileName:
+  free(ri->fileName);
+out_name:
+  free(ri->name);
+out_fields:
+  for (size_t i = 0; i < ri->fieldCount; i++)
+    if (ri->fields[i])
+      deleteFieldInfo(ri->fields[i]);
+  free(ri->fields);
+out_ri:
+  free(ri);
+  return 0;
 }

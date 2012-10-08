@@ -13,10 +13,62 @@ static bool flag_process_templates = false;
 static bool flag_print_layout = false;
 // Print all records with layout
 static bool flag_print_all = false;
+static const char* fileDumpName = 0;
 
 static struct RecordInfo** records;
 static size_t recordCount = 0;
 static size_t recordCapacity = 256;
+
+static bool loadDump()
+{
+  // Check whether dump already exists
+  if (access(fileDumpName, F_OK) == -1)
+    return true;
+
+  FILE* file = fopen(fileDumpName, "r");
+  if (!file)
+  {
+    error("Can't open RecordSize dump file %s: %s", fileDumpName, xstrerror(errno));
+    return false;
+  }
+
+  if (fread(&recordCount, sizeof(recordCount), 1, file) != 1)
+    goto out_dump;
+  recordCapacity = recordCount;
+  records = xcalloc(recordCount, sizeof(struct RecordInfo*));
+  for (size_t i = 0; i < recordCount; i++)
+    if ((records[i] = loadRecordInfo(file)) == 0)
+      goto out_records;
+
+  fclose(file);
+  return true;
+
+out_records:
+  for (size_t i = 0; i < recordCount; i++)
+    if (records[i])
+      deleteRecordInfo(records[i]);
+  free(records);
+out_dump:
+  error("Can't read RecordSize dump file %s: I/O error or invalid data in file", fileDumpName);
+  fclose(file);
+  return false;
+}
+
+static void saveDump()
+{
+  FILE* file = fopen(fileDumpName, "w");
+  if (!file)
+  {
+    error("Can't open RecordSize dump file %s: %s", fileDumpName, xstrerror(errno));
+    return;
+  }
+
+  fwrite(&recordCount, sizeof(recordCount), 1, file);
+  for (size_t i = 0; i < recordCount; i++)
+    saveRecordInfo(file, records[i]);
+
+  fclose(file);
+}
 
 static void deleteRecords()
 {
@@ -160,13 +212,16 @@ static void recordsize_override_gate(void *gcc_data, void *plugin_data)
 
   firstTime = false;
 
-  // Initialize storage for records
-  records = xmalloc(recordCapacity * sizeof(struct RecordInfo*));
+  // Initialize storage for records (if they aren't loaded from dump)
+  if (!records)
+    records = xmalloc(recordCapacity * sizeof(struct RecordInfo*));
 
   // GNU C++ stores root node of AST in variable 'global_namespace' which is
   // NAMESPACE_DECL. It corresponds to top-level C++ namespace '::'
   traverseNamespace(global_namespace);
 
+  if (fileDumpName)
+    saveDump();
   // Free records
   deleteRecords();
 }
@@ -193,6 +248,13 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
       {
         flag_print_layout = true;
         flag_print_all = true;
+      }
+      if (strcmp(info->argv[i].key, "dumpfile") == 0)
+      {
+        flag_process_templates = true;
+        fileDumpName = info->argv[i].value;
+        if (!loadDump())
+          return 1;
       }
     }
   }
