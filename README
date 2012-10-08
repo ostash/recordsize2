@@ -1,0 +1,31 @@
+This is RecordSize plugin for GNU C++ compiler
+
+Its aim is to detect cases where we can save some space by reorganizing fields
+within record.
+
+Usage:
+
+g++ -fplugin=recordsize.so some_cpp_source
+
+By default plugin will emit a warning for records for which its minimal size
+estimation is less then actual record size. Template instantiations are ignored.
+
+You can tweak plugin behavior using command line switches:
+
+-fplugin-arg-recordsize-process-templates - enables template instantiations
+  processing.
+
+-fplugin-arg-recordsize-print-layout - print record layout. That allows to see
+  which sizes/offsets/alignments are used by each field of reported records.
+
+-fplugin-arg-recordsize-print-layout-all - print record layout for all records
+  we process.
+
+-fplugin-arg-recordsize-dumpfile=filename - dump record information to given
+  file. Dump file is appended with new record information on each next GCC
+  invocation. This especially useful if you modify CXXFLAGS for some large
+  project. After build is finished you can use separate tool report-recordsize
+  and build report for whole project.
+  WARNING: There is no source file updates tracking, so you have to remove dump
+  after you've modified sources. Otherwise record data won't be updated and
+  you'll see outdated output!
