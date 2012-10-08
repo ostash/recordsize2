@@ -5,10 +5,10 @@ recordsize:
 	recordsize.c RecordInfo.c FieldInfo.c
 
 test1:
-	g++ -fplugin=./recordsize.so test1.h
+	g++ -fplugin=./recordsize.so -fplugin-arg-recordsize-process-templates -fplugin-arg-recordsize-print-all test1.h
 
 test2:
-	g++ -fplugin=./recordsize.so test2.h
+	g++ -fplugin=./recordsize.so -fplugin-arg-recordsize-process-templates -fplugin-arg-recordsize-print-all test2.h
 
 dump1:
 	g++ -fdump-tree-all test1.h
