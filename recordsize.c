@@ -12,6 +12,11 @@ static bool flag_print_ns = false;
 // Print field offset details (as in GCC)
 static bool flag_print_offset_details = false;
 
+
+static struct RecordInfo** records;
+static size_t recordCount = 0;
+static size_t recordCapacity = 256;
+
 enum
 {
   CNT_FUNCTION,
@@ -39,6 +44,23 @@ struct NamespaceStats
   size_t namesCount[CNT_LAST];
   size_t builtinCount[CNT_LAST];
 };
+
+static void deleteRecords()
+{
+  for (size_t i = 0; i < recordCount; i++)
+    deleteRecordInfo(records[i]);
+
+  free(records);
+}
+
+static bool isProcessed(const char* typeName)
+{
+  for (size_t i = 0; i < recordCount; i++)
+    if (strcmp(records[i]->name, typeName) == 0)
+      return true;
+
+  return false;
+}
 
 static void processType(const tree type)
 {
@@ -71,10 +93,21 @@ static void processType(const tree type)
   if (!COMPLETE_TYPE_P(aggregate_type))
     return;
 
-  struct RecordInfo* ri = createRecordInfo(type, aggregate_type);
-  estimateMinRecordSize(ri);
-  printRecordInfo(ri, flag_print_offset_details);
-  deleteRecordInfo(ri);
+  if (!isProcessed(type_as_string(aggregate_type, 0)))
+  {
+    struct RecordInfo* ri = createRecordInfo(type, aggregate_type);
+    estimateMinRecordSize(ri);
+    printRecordInfo(ri, flag_print_offset_details);
+
+    recordCount++;
+    if (recordCount > recordCapacity)
+    {
+      recordCapacity *= 2;
+      records = xrealloc(records, recordCapacity * sizeof(struct RecordInfo*));
+    }
+
+    records[recordCount - 1] = ri;
+  }
 }
 
 static void processTemplate(const tree template)
@@ -217,9 +250,15 @@ static void recordsize_override_gate(void *gcc_data, void *plugin_data)
 
   firstTime = false;
 
+  // Initialize storage for records
+  records = xmalloc(recordCapacity * sizeof(struct RecordInfo*));
+
   // GNU C++ stores root node of AST in variable 'global_namespace' which is
   // NAMESPACE_DECL. It corresponds to top-level C++ namespace '::'
   traverseNamespace(global_namespace);
+
+  // Free records
+  deleteRecords();
 }
 
 int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
