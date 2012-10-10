@@ -205,7 +205,7 @@ void printRecordInfo(FILE* file, const struct RecordInfo* ri, bool printLayout)
   {
     struct FieldInfo* fi = ri->fields[i];
     size_t offset = fi->offset;
-    size_t size = fi->offset;
+    size_t size = fi->size;
     size_t align = fi->align;
     if (!fi->isBitField)
     {
