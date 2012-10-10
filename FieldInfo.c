@@ -39,12 +39,6 @@ struct FieldInfo* createFieldInfo(const tree field_decl)
   return fi;
 }
 
-void deleteFieldInfo(struct FieldInfo* fi)
-{
-  free(fi->name);
-  free(fi);
-}
-
 void saveFieldInfo(FILE* file, const struct FieldInfo* fi)
 {
   size_t len = strlen(fi->name);

@@ -58,18 +58,6 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   return ri;
 }
 
-void deleteRecordInfo(struct RecordInfo* ri)
-{
-  free(ri->name);
-  free(ri->fileName);
-
-  for (size_t i = 0; i < ri->fieldCount; i++)
-    deleteFieldInfo(ri->fields[i]);
-
-  free(ri->fields);
-  free(ri);
-}
-
 void printRecordInfo(const struct RecordInfo* ri, bool printLayout)
 {
   char recordFlags[6] = "\0";

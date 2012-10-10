@@ -1,5 +1,23 @@
 #include "RecordInfo.h"
 
+void deleteFieldInfo(struct FieldInfo* fi)
+{
+  free(fi->name);
+  free(fi);
+}
+
+void deleteRecordInfo(struct RecordInfo* ri)
+{
+  free(ri->name);
+  free(ri->fileName);
+
+  for (size_t i = 0; i < ri->fieldCount; i++)
+    deleteFieldInfo(ri->fields[i]);
+
+  free(ri->fields);
+  free(ri);
+}
+
 struct FieldInfo* loadFieldInfo(FILE* file)
 {
   struct FieldInfo* fi = xmalloc(sizeof(struct FieldInfo));
