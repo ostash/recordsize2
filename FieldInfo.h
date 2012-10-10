@@ -16,9 +16,7 @@ struct FieldInfo
 };
 
 struct FieldInfo* createFieldInfo(const tree field_decl);
-void deleteFieldInfo(struct FieldInfo* fi);
 
 void saveFieldInfo(FILE* file, const struct FieldInfo* ri);
-struct FieldInfo* loadFieldInfo(FILE* file);
 
 #endif

@@ -22,12 +22,10 @@ struct RecordInfo
 };
 
 struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type);
-void deleteRecordInfo(struct RecordInfo* ri);
 void printRecordInfo(const struct RecordInfo* ri, bool printLayout);
 
 void estimateMinRecordSize(struct RecordInfo* ri);
 
 void saveRecordInfo(FILE* file, const struct RecordInfo* ri);
-struct RecordInfo* loadRecordInfo(FILE* file);
 
 #endif
