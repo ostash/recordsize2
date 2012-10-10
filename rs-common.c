@@ -178,11 +178,11 @@ void printRecordInfo(FILE* file, const struct RecordInfo* ri, bool printLayout)
     *rf = 0;
   }
 
-  fprintf(file, "Record %s%s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", recordFlags, ri->name,
-    ri->fileName, ri->line, ri->size, ri->align, ri->fieldCount);
+  fprintf(file, "Record %s%s at %s:%zu; size %zu byte(s), align %zu byte(s), total %zu field(s)\n", recordFlags, ri->name,
+    ri->fileName, ri->line, ri->size / 8, ri->align / 8, ri->fieldCount);
 
   if (ri->estMinSize < ri->size)
-    fprintf(file, "Warning: estimated minimal size is only %zu\n", ri->estMinSize);
+    fprintf(file, "Warning: estimated minimal size is only %zu byte(s)\n", ri->estMinSize / 8);
 
   if (!printLayout || ri->fieldCount == 0)
     return;
@@ -204,9 +204,17 @@ void printRecordInfo(FILE* file, const struct RecordInfo* ri, bool printLayout)
   for (size_t i = 0; i < ri->fieldCount; i++)
   {
     struct FieldInfo* fi = ri->fields[i];
+    size_t offset = fi->offset;
+    size_t size = fi->offset;
+    size_t align = fi->align;
+    if (!fi->isBitField)
+    {
+      offset /= 8;
+      size /= 8;
+      align /= 8;
+    }
     fprintf(file, "%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
-      fi->offset, colWidths[3] ,fi->size, colWidths[4], fi->align, colWidths[5], fi->isSpecial,
-      colWidths[6], fi->isBitField);
+      offset, colWidths[3] ,size, colWidths[4], align, colWidths[5], fi->isSpecial, colWidths[6], fi->isBitField);
   }
 
 }
