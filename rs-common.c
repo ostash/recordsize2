@@ -21,6 +21,14 @@ void deleteRecordInfo(struct RecordInfo* ri)
   free(ri);
 }
 
+void deleteRecordStorage(struct RecordStorage* rs)
+{
+  for (size_t i = 0; i < rs->recordCount; i++)
+    deleteRecordInfo(rs->records[i]);
+
+  free(rs);
+}
+
 struct FieldInfo* loadFieldInfo(FILE* file)
 {
   struct FieldInfo* fi = xmalloc(sizeof(struct FieldInfo));
@@ -123,5 +131,30 @@ out_fields:
   free(ri->fields);
 out_ri:
   free(ri);
+  return 0;
+}
+
+struct RecordStorage* loadRecordStorage(FILE* file)
+{
+  struct RecordStorage* rs = (struct RecordStorage*) xcalloc(1, sizeof(struct RecordStorage));
+
+  // Read record count
+  if (fread(&rs->recordCount, sizeof(rs->recordCount), 1, file) != 1)
+    goto out_rs;
+  rs->recordCapacity = rs->recordCount;
+  rs->records = xcalloc(rs->recordCount, sizeof(struct RecordInfo*));
+  for (size_t i = 0; i < rs->recordCount; i++)
+    if ((rs->records[i] = loadRecordInfo(file)) == 0)
+      goto out_records;
+
+  return rs;
+
+out_records:
+  for (size_t i = 0; i < rs->recordCount; i++)
+    if (rs->records[i])
+      deleteRecordInfo(rs->records[i]);
+  free(rs->records);
+out_rs:
+  free(rs);
   return 0;
 }

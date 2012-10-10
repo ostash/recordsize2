@@ -7,8 +7,10 @@
 
 void deleteFieldInfo(struct FieldInfo* fi);
 void deleteRecordInfo(struct RecordInfo* ri);
+void deleteRecordStorage(struct RecordStorage* rs);
 
-struct RecordInfo* loadRecordInfo(FILE* file);
 struct FieldInfo* loadFieldInfo(FILE* file);
+struct RecordInfo* loadRecordInfo(FILE* file);
+struct RecordStorage* loadRecordStorage(FILE* file);
 
 #endif

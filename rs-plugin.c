@@ -96,6 +96,16 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   return ri;
 }
 
+struct RecordStorage* createRecordStorage()
+{
+  struct RecordStorage* rs = xmalloc(sizeof(struct RecordStorage));
+  rs->recordCount = 0;
+  rs->recordCapacity = 256;
+  rs->records = xmalloc(rs->recordCapacity * sizeof(struct RecordInfo*));
+
+  return rs;
+}
+
 void saveFieldInfo(FILE* file, const struct FieldInfo* fi)
 {
   size_t len = strlen(fi->name);
@@ -135,6 +145,13 @@ void saveRecordInfo(FILE* file, const struct RecordInfo* ri)
   fwrite(&ri->hasBitFields, sizeof(ri->hasBitFields), 1, file);
   fwrite(&ri->isInstance, sizeof(ri->isInstance), 1, file);
   fwrite(&ri->hasVirtualBase, sizeof(ri->hasVirtualBase), 1, file);
+}
+
+void saveRecordStorage(FILE* file, const struct RecordStorage* rs)
+{
+  fwrite(&rs->recordCount, sizeof(rs->recordCount), 1, file);
+  for (size_t i = 0; i < rs->recordCount; i++)
+    saveRecordInfo(file, rs->records[i]);
 }
 
 void estimateMinRecordSize(struct RecordInfo* ri)
