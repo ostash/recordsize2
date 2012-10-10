@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 enum {
@@ -39,10 +40,6 @@ int parseSkip(const char* skipSpec)
   return flags;
 }
 
-void parseSort(const char* sortSpec)
-{
-}
-
 void filterStorage(struct RecordStorage* rs, int skipFlags)
 {
   size_t lastIdx = 0;
@@ -62,6 +59,59 @@ void filterStorage(struct RecordStorage* rs, int skipFlags)
   rs->recordCount = lastIdx;
 }
 
+int compare_size(const void* p1, const void *p2)
+{
+  struct RecordInfo* ri1 = *(struct RecordInfo**) p1;
+  struct RecordInfo* ri2 = *(struct RecordInfo**) p2;
+
+  if (ri1->size > ri2->size)
+    return -1;
+  else if (ri1->size < ri2->size)
+    return 1;
+
+  return 0;
+}
+
+int compare_diff(const void* p1, const void *p2)
+{
+  struct RecordInfo* ri1 = *(struct RecordInfo**) p1;
+  struct RecordInfo* ri2 = *(struct RecordInfo**) p2;
+  int diff1 = (ri1->estMinSize < ri1->size) ? ri1->size - ri1->estMinSize : 0;
+  int diff2 = (ri2->estMinSize < ri2->size) ? ri2->size - ri2->estMinSize : 0;
+
+  return diff2 - diff1;
+}
+
+int compare_name(const void* p1, const void *p2)
+{
+  struct RecordInfo* ri1 = *(struct RecordInfo**) p1;
+  struct RecordInfo* ri2 = *(struct RecordInfo**) p2;
+
+  return strcmp(ri1->name, ri2->name);
+}
+
+void sortStorage(struct RecordStorage* rs, const char* sortSpec)
+{
+  while (*sortSpec)
+  {
+    switch (*sortSpec)
+    {
+    case 's':
+      qsort(rs->records, rs->recordCount, sizeof(struct RecordInfo*), compare_size);
+      break;
+    case 'd':
+      qsort(rs->records, rs->recordCount, sizeof(struct RecordInfo*), compare_diff);
+      break;
+    case 'n':
+      qsort(rs->records, rs->recordCount, sizeof(struct RecordInfo*), compare_name);
+      break;
+    default:
+      break;
+    }
+    sortSpec++;
+  }
+}
+
 int main(int argc, char** argv)
 {
   if (argc < 2)
@@ -71,13 +121,14 @@ int main(int argc, char** argv)
   }
 
   int skipFlags = 0;
+  const char* sortSpec = 0;
 
   for (int i = 2; i < argc; i++)
   {
     if (strstr(argv[i], "skip=") == argv[i])
       skipFlags = parseSkip(argv[i] + 5);
     else if (strstr(argv[i], "sort=") == argv[i])
-      parseSort(argv[i] + 5);
+      sortSpec = argv[i] + 5;
     else
     {
       printf("Unknown command-line option: %s\n", argv[i]);
@@ -102,6 +153,8 @@ int main(int argc, char** argv)
   fclose(dumpFile);
 
   filterStorage(rs, skipFlags);
+  if (sortSpec)
+    sortStorage(rs, sortSpec);
 
   for (size_t i = 0; i < rs->recordCount; i++)
     printRecordInfo(stdout, rs->records[i], true);
