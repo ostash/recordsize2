@@ -15,6 +15,4 @@ void saveRecordStorage(FILE* file, const struct RecordStorage* rs);
 
 void estimateMinRecordSize(struct RecordInfo* ri);
 
-void printRecordInfo(const struct RecordInfo* ri, bool printLayout);
-
 #endif
