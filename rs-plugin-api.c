@@ -16,9 +16,7 @@ static bool flag_print_layout = false;
 static bool flag_print_all = false;
 static const char* fileDumpName = 0;
 
-static struct RecordInfo** records;
-static size_t recordCount = 0;
-static size_t recordCapacity = 256;
+static struct RecordStorage storage = {0, 0, 256};
 
 static bool loadDump()
 {
@@ -33,22 +31,22 @@ static bool loadDump()
     return false;
   }
 
-  if (fread(&recordCount, sizeof(recordCount), 1, file) != 1)
+  if (fread(&storage.recordCount, sizeof(storage.recordCount), 1, file) != 1)
     goto out_dump;
-  recordCapacity = recordCount;
-  records = xcalloc(recordCount, sizeof(struct RecordInfo*));
-  for (size_t i = 0; i < recordCount; i++)
-    if ((records[i] = loadRecordInfo(file)) == 0)
+  storage.recordCapacity = storage.recordCount;
+  storage.records = xcalloc(storage.recordCount, sizeof(struct RecordInfo*));
+  for (size_t i = 0; i < storage.recordCount; i++)
+    if ((storage.records[i] = loadRecordInfo(file)) == 0)
       goto out_records;
 
   fclose(file);
   return true;
 
 out_records:
-  for (size_t i = 0; i < recordCount; i++)
-    if (records[i])
-      deleteRecordInfo(records[i]);
-  free(records);
+  for (size_t i = 0; i < storage.recordCount; i++)
+    if (storage.records[i])
+      deleteRecordInfo(storage.records[i]);
+  free(storage.records);
 out_dump:
   error("Can't read RecordSize dump file %s: I/O error or invalid data in file", fileDumpName);
   fclose(file);
@@ -64,25 +62,25 @@ static void saveDump()
     return;
   }
 
-  fwrite(&recordCount, sizeof(recordCount), 1, file);
-  for (size_t i = 0; i < recordCount; i++)
-    saveRecordInfo(file, records[i]);
+  fwrite(&storage.recordCount, sizeof(storage.recordCount), 1, file);
+  for (size_t i = 0; i < storage.recordCount; i++)
+    saveRecordInfo(file, storage.records[i]);
 
   fclose(file);
 }
 
 static void deleteRecords()
 {
-  for (size_t i = 0; i < recordCount; i++)
-    deleteRecordInfo(records[i]);
+  for (size_t i = 0; i < storage.recordCount; i++)
+    deleteRecordInfo(storage.records[i]);
 
-  free(records);
+  free(storage.records);
 }
 
 static bool isProcessed(const char* typeName)
 {
-  for (size_t i = 0; i < recordCount; i++)
-    if (strcmp(records[i]->name, typeName) == 0)
+  for (size_t i = 0; i < storage.recordCount; i++)
+    if (strcmp(storage.records[i]->name, typeName) == 0)
       return true;
 
   return false;
@@ -127,14 +125,14 @@ static void processType(const tree type)
     if (flag_print_all || ri->estMinSize < ri->size)
       printRecordInfo(ri, flag_print_layout);
 
-    recordCount++;
-    if (recordCount > recordCapacity)
+    storage.recordCount++;
+    if (storage.recordCount > storage.recordCapacity)
     {
-      recordCapacity *= 2;
-      records = xrealloc(records, recordCapacity * sizeof(struct RecordInfo*));
+      storage.recordCapacity *= 2;
+      storage.records = xrealloc(storage.records, storage.recordCapacity * sizeof(struct RecordInfo*));
     }
 
-    records[recordCount - 1] = ri;
+    storage.records[storage.recordCount - 1] = ri;
   }
 }
 
@@ -214,8 +212,8 @@ static void recordsize_override_gate(void *gcc_data, void *plugin_data)
   firstTime = false;
 
   // Initialize storage for records (if they aren't loaded from dump)
-  if (!records)
-    records = xmalloc(recordCapacity * sizeof(struct RecordInfo*));
+  if (!storage.records)
+    storage.records = xmalloc(storage.recordCapacity * sizeof(struct RecordInfo*));
 
   // GNU C++ stores root node of AST in variable 'global_namespace' which is
   // NAMESPACE_DECL. It corresponds to top-level C++ namespace '::'

@@ -33,4 +33,11 @@ struct RecordInfo
   bool hasVirtualBase;
 };
 
+struct RecordStorage
+{
+  struct RecordInfo** records;
+  size_t recordCount;
+  size_t recordCapacity;
+};
+
 #endif
