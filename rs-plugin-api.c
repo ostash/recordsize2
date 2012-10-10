@@ -101,7 +101,7 @@ static void processType(const tree type)
     estimateMinRecordSize(ri);
 
     if (flag_print_all || ri->estMinSize < ri->size)
-      printRecordInfo(ri, flag_print_layout);
+      printRecordInfo(stderr, ri, flag_print_layout);
 
     storage->recordCount++;
     if (storage->recordCount > storage->recordCapacity)

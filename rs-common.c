@@ -160,7 +160,7 @@ out_rs:
   return 0;
 }
 
-void printRecordInfo(const struct RecordInfo* ri, bool printLayout)
+void printRecordInfo(FILE* file, const struct RecordInfo* ri, bool printLayout)
 {
   char recordFlags[6] = "\0";
   if (ri->hasBitFields || ri->isInstance || ri->hasVirtualBase)
@@ -178,11 +178,11 @@ void printRecordInfo(const struct RecordInfo* ri, bool printLayout)
     *rf = 0;
   }
 
-  printf("Record %s%s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", recordFlags, ri->name,
+  fprintf(file, "Record %s%s at %s:%zu; size %zu bits, align %zu bits, total %zu field(s)\n", recordFlags, ri->name,
     ri->fileName, ri->line, ri->size, ri->align, ri->fieldCount);
 
   if (ri->estMinSize < ri->size)
-    printf("Warning: estimated minimal size is only %zu\n", ri->estMinSize);
+    fprintf(file, "Warning: estimated minimal size is only %zu\n", ri->estMinSize);
 
   if (!printLayout || ri->fieldCount == 0)
     return;
@@ -197,14 +197,14 @@ void printRecordInfo(const struct RecordInfo* ri, bool printLayout)
       colWidths[i] = len;
   }
 
-  printf("%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
+  fprintf(file, "%*s|%-*s|%-*s|%-*s|%-*s|%-*s|%-*s\n", colWidths[0], colNames[0], colWidths[1], colNames[1],
     colWidths[2], colNames[2], colWidths[3], colNames[3], colWidths[4], colNames[4], colWidths[5], colNames[5],
     colWidths[6], colNames[6]);
 
   for (size_t i = 0; i < ri->fieldCount; i++)
   {
     struct FieldInfo* fi = ri->fields[i];
-    printf("%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
+    fprintf(file, "%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
       fi->offset, colWidths[3] ,fi->size, colWidths[4], fi->align, colWidths[5], fi->isSpecial,
       colWidths[6], fi->isBitField);
   }

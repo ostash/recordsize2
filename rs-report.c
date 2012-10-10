@@ -104,7 +104,7 @@ int main(int argc, char** argv)
   filterStorage(rs, skipFlags);
 
   for (size_t i = 0; i < rs->recordCount; i++)
-    printRecordInfo(rs->records[i], true);
+    printRecordInfo(stdout, rs->records[i], true);
 
   deleteRecordStorage(rs);
   return 0;
