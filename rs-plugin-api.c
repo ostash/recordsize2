@@ -2,8 +2,8 @@
 #include <cp/cp-tree.h>
 #include <langhooks.h>
 
-#include "RecordInfo.h"
-#include "common.h"
+#include "rs-common.h"
+#include "rs-plugin.h"
 
 int plugin_is_GPL_compatible;
 static struct plugin_info recordsize_plugin_info = { "0.3", "Record size plugin" };

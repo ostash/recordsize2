@@ -1,5 +1,9 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef RS_COMMON_H
+#define RS_COMMON_H
+
+#include "rs-types.h"
+
+#include <stdio.h>
 
 void deleteFieldInfo(struct FieldInfo* fi);
 void deleteRecordInfo(struct RecordInfo* ri);

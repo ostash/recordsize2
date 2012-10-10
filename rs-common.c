@@ -1,4 +1,7 @@
-#include "RecordInfo.h"
+#include "rs-common.h"
+
+#include <libiberty.h>
+#include <stdlib.h>
 
 void deleteFieldInfo(struct FieldInfo* fi)
 {
