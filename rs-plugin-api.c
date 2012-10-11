@@ -2,6 +2,8 @@
 #include <cp/cp-tree.h>
 #include <langhooks.h>
 
+#include <sys/file.h>
+
 #include "rs-common.h"
 #include "rs-plugin.h"
 
@@ -15,44 +17,57 @@ static bool flag_print_layout = false;
 // Print all records with layout
 static bool flag_print_all = false;
 static const char* fileDumpName = 0;
-
+static FILE* fileDump = 0;
 static struct RecordStorage* storage = 0;
 
-static bool loadDump()
+static bool initStorage()
 {
-  // Check whether dump already exists
-  if (access(fileDumpName, F_OK) == -1)
-    return true;
-
-  FILE* file = fopen(fileDumpName, "r");
-  if (!file)
+  // If dump file name present we want to open it for r/w and create if it
+  // doesn't exist
+  if (fileDumpName)
   {
-    error("Can't open RecordSize dump file %s: %s", fileDumpName, xstrerror(errno));
-    return false;
+    if (!(fileDump = fopen(fileDumpName, "a+")))
+    {
+      fprintf(stderr, "Can't open RecordSize dump file %s: %s\n", fileDumpName, xstrerror(errno));
+      return false;
+    }
+    // Lock it
+    flock(fileno(fileDump), LOCK_EX);
+    // It could happen that dump is empty because we've just created it
+    struct stat fileDumpStat;
+    fstat(fileno(fileDump), &fileDumpStat);
+    if (fileDumpStat.st_size == 0)
+    {
+      storage = createRecordStorage();
+      return true;
+    }
+    // Let's read dump otherwise
+    if ((storage = loadRecordStorage(fileDump)) == 0)
+    {
+      fprintf(stderr, "Can't read RecordSize dump file %s: I/O error or invalid data in file\n", fileDumpName);
+      fclose(fileDump);
+      return false;
+    }
   }
+  else
+    storage = createRecordStorage();
 
-  if ((storage = loadRecordStorage(file)) == 0)
-  {
-    error("Can't read RecordSize dump file %s: I/O error or invalid data in file", fileDumpName);
-    fclose(file);
-    return false;
-  }
-
-  fclose(file);
   return true;
 }
 
-static void saveDump()
+static void finalizeStorage()
 {
-  FILE* file = fopen(fileDumpName, "w");
-  if (!file)
+  if (fileDump)
   {
-    error("Can't open RecordSize dump file %s: %s", fileDumpName, xstrerror(errno));
-    return;
+    // Clear dump file
+    ftruncate(fileno(fileDump), 0);
+    // Save updated dump
+    saveRecordStorage(fileDump, storage);
+    // This will unlock dump file as well
+    fclose(fileDump);
   }
 
-  saveRecordStorage(file, storage);
-  fclose(file);
+  deleteRecordStorage(storage);
 }
 
 static bool isProcessed(const char* typeName)
@@ -189,18 +204,16 @@ static void recordsize_override_gate(void *gcc_data, void *plugin_data)
 
   firstTime = false;
 
-  // Initialize storage for records (if they aren't loaded from dump)
-  if (!storage)
-    storage = createRecordStorage();
+  // Initialize storage for records
+  if (!initStorage())
+    return;
 
   // GNU C++ stores root node of AST in variable 'global_namespace' which is
   // NAMESPACE_DECL. It corresponds to top-level C++ namespace '::'
   traverseNamespace(global_namespace);
 
-  if (fileDumpName)
-    saveDump();
-  // Free records
-  deleteRecordStorage(storage);
+  // Finalize storage for records
+  finalizeStorage();
 }
 
 int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
@@ -230,8 +243,6 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
       {
         flag_process_templates = true;
         fileDumpName = info->argv[i].value;
-        if (!loadDump())
-          return 1;
       }
     }
   }
