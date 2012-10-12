@@ -24,8 +24,46 @@ You can tweak plugin behavior using command line switches:
 -fplugin-arg-recordsize-dumpfile=filename - dump record information to given
   file. Dump file is appended with new record information on each next GCC
   invocation. This especially useful if you modify CXXFLAGS for some large
-  project. After build is finished you can use separate tool report-recordsize
-  and build report for whole project.
+  project. After build is finished you can use separate tool rs-report and build
+  report for whole project.
   WARNING: There is no source file updates tracking, so you have to remove dump
   after you've modified sources. Otherwise record data won't be updated and
   you'll see outdated output!
+
+Report tool usage:
+
+rs-report dumpfile [skip=skipspec] [sort=sortspec]
+
+By default rs-report will dump all records with layout in some random order.
+You can omit printing some type of records by adding 'skip' argument.
+Following letters are accepted in 'skipspec':
+  e - skip empty records (with bases/fields)
+  g - skip 'good' records. Record is 'good' if its actual size is less or equal
+      to estimated minimal size. Not-estimated records are also 'good'.
+  t - skip template instantiations.
+
+You can force specific sorting by adding 'sort' argument.
+Following letters are accepted in 'sortspec':
+  d - sort by difference between actual size and estimated minimal size (most
+      oversized records first). 'Good' records are left as is.
+  s - sort by record actual size.
+  n - sort record name.
+
+Examples:
+
+rs-report dumpfile skip=g sort=d
+  Print only oversized records with most oversized first.
+
+rs-report dumpfile skip=et sort=ns
+  Print only non-template and non-empty records ordered by name and size.
+
+
+Caveats:
+
+Not all records are estimated. Currently we ignore records with:
+ - bit-fields. Optimal bit-field layout is NP-hard problem (bin packing problem)
+ - virtual bases. Vptr and virtual base are placed at the end of derived class,
+   so this case is tricky.
+
+Minimal size estimation doesn't try to reorder bases in multiple inheritance case.
+It doesn't try to fit any member into padding between bases and first field.
