@@ -1,19 +1,21 @@
 #include "rs-common.h"
 
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 enum {
-  SKIP_EMPTY=0x01,
-  SKIP_TEMPLATES=0x02,
-  SKIP_GOOD=0x04
+  SKIP_EMPTY = 0x01,
+  SKIP_GOOD = 0x02,
+  SKIP_HANDLED = 0x04,
+  SKIP_TEMPLATES = 0x08
 };
 
 void usage(const char* progName)
 {
-  printf("Usage: %s dumpfile [skip=etg] [sort=sdn]\n", progName);
+  printf("Usage: %s dumpfile [skip=eght] [sort=dns]\n", progName);
 }
 
 int parseSkip(const char* skipSpec)
@@ -26,11 +28,14 @@ int parseSkip(const char* skipSpec)
     case 'e':
       flags |= SKIP_EMPTY;
       break;
-    case 't':
-      flags |= SKIP_TEMPLATES;
-      break;
     case 'g':
       flags |= SKIP_GOOD;
+      break;
+    case 'h':
+      flags |= SKIP_HANDLED;
+      break;
+    case 't':
+      flags |= SKIP_TEMPLATES;
       break;
     default:
       break;
@@ -47,8 +52,9 @@ void filterStorage(struct RecordStorage* rs, int skipFlags)
   {
     struct RecordInfo* ri = rs->records[i];
     if ((skipFlags & SKIP_EMPTY && ri->fieldCount == 0) ||
-      (skipFlags & SKIP_TEMPLATES && ri->isInstance) ||
-      (skipFlags & SKIP_GOOD && ri->estMinSize >= ri->size))
+      (skipFlags & SKIP_GOOD && ri->estMinSize >= ri->size) ||
+      (skipFlags & SKIP_HANDLED && (ri->estMinSize != SIZE_MAX)) ||
+      (skipFlags & SKIP_TEMPLATES && ri->isInstance))
       deleteRecordInfo(ri);
     else
     {

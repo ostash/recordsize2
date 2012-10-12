@@ -40,6 +40,7 @@ Following letters are accepted in 'skipspec':
   e - skip empty records (with bases/fields)
   g - skip 'good' records. Record is 'good' if its actual size is less or equal
       to estimated minimal size. Not-estimated records are also 'good'.
+  h - skip handled records (see caveats to know what records aren't handled)
   t - skip template instantiations.
 
 You can force specific sorting by adding 'sort' argument.
@@ -47,7 +48,7 @@ Following letters are accepted in 'sortspec':
   d - sort by difference between actual size and estimated minimal size (most
       oversized records first). 'Good' records are left as is.
   s - sort by record actual size.
-  n - sort record name.
+  n - sort by record name.
 
 Examples:
 
