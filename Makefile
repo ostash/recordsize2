@@ -22,7 +22,7 @@ recordsize_c:
 	rs-plugin-api.c rs-plugin.c rs-common.c
 
 recordsize_cpp:
-	$(CXX) $(CXXFLAGS) -shared -fpic -I $(PLUGININCLUDE)  -o recordsize.so \
+	$(CXX) $(CXXFLAGS) -D__STDC_LIMIT_MACROS -shared -fpic -I $(PLUGININCLUDE)  -o recordsize.so \
 	rs-plugin-api.c rs-plugin.c rs-common.c
 
 report:
