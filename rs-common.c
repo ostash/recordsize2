@@ -1,6 +1,9 @@
 #include "rs-common.h"
 
+#define HAVE_DECL_BASENAME 1
 #include <libiberty.h>
+#undef HAVE_DECL_BASENAME
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,13 +35,13 @@ void deleteRecordStorage(struct RecordStorage* rs)
 
 struct FieldInfo* loadFieldInfo(FILE* file)
 {
-  struct FieldInfo* fi = xmalloc(sizeof(struct FieldInfo));
+  struct FieldInfo* fi = (struct FieldInfo*)xmalloc(sizeof(struct FieldInfo));
 
   // Read field name length
   size_t len;
   if (fread(&len, sizeof(len), 1, file) != 1)
     goto out_fi;
-  fi->name = xmalloc(len + 1);
+  fi->name = (char*)xmalloc(len + 1);
   // Read field name
   if (fread(fi->name, len + 1, 1, file) != 1 || fi->name[len] != 0)
     goto out_name;
@@ -75,7 +78,7 @@ struct RecordInfo* loadRecordInfo(FILE* file)
   if (fread(&ri->fieldCount, sizeof(ri->fieldCount), 1, file) != 1)
     goto out_ri;
   // Read fields
-  ri->fields = xcalloc(ri->fieldCount, sizeof(struct FieldInfo*));
+  ri->fields = (struct FieldInfo**)xcalloc(ri->fieldCount, sizeof(struct FieldInfo*));
   for (size_t i = 0; i < ri->fieldCount; i++)
     if ((ri->fields[i] = loadFieldInfo(file)) == 0)
       goto out_fields;
@@ -83,14 +86,14 @@ struct RecordInfo* loadRecordInfo(FILE* file)
   size_t len;
   if (fread(&len, sizeof(len), 1, file) != 1)
     goto out_fields;
-  ri->name = xmalloc(len + 1);
+  ri->name = (char*)xmalloc(len + 1);
   // Read record name
   if (fread(ri->name, len + 1, 1, file) != 1 || ri->name[len] != 0)
     goto out_name;
   // Read source file name length
   if (fread(&len, sizeof(len), 1, file) != 1)
     goto out_name;
-  ri->fileName = xmalloc(len + 1);
+  ri->fileName = (char*)xmalloc(len + 1);
   // Read source file name
   if (fread(ri->fileName, len + 1, 1, file) != 1 || ri->fileName[len] != 0)
     goto out_fileName;
@@ -143,7 +146,7 @@ struct RecordStorage* loadRecordStorage(FILE* file)
   if (fread(&rs->recordCount, sizeof(rs->recordCount), 1, file) != 1)
     goto out_rs;
   rs->recordCapacity = rs->recordCount;
-  rs->records = xcalloc(rs->recordCount, sizeof(struct RecordInfo*));
+  rs->records = (struct RecordInfo**)xcalloc(rs->recordCount, sizeof(struct RecordInfo*));
   for (size_t i = 0; i < rs->recordCount; i++)
     if ((rs->records[i] = loadRecordInfo(file)) == 0)
       goto out_records;
@@ -187,7 +190,7 @@ void printRecordInfo(FILE* file, const struct RecordInfo* ri, bool printLayout)
   if (!printLayout || ri->fieldCount == 0)
     return;
 
-  char* colNames[] = { "#", "Name", "Offset", "Size", "Align", "Special" ,"Bit" };
+  const char* colNames[] = { "#", "Name", "Offset", "Size", "Align", "Special" ,"Bit" };
   int colWidths[] = { 3, 32, 6, 6, 3, 1, 1};
   const size_t colCount = sizeof(colNames) / sizeof(char*);
   for (size_t i = 1; i < colCount; i++)

@@ -55,7 +55,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
   ri->estMinSize = SIZE_MAX;
 
   size_t fieldCapacity = 4;
-  ri->fields = xmalloc(fieldCapacity * sizeof(struct FieldInfo*));
+  ri->fields = (struct FieldInfo**)xmalloc(fieldCapacity * sizeof(struct FieldInfo*));
 
   // Fields/variables/constants/functions are chained via TYPE_FIELDS of record
   for (tree field = TYPE_FIELDS(record_type); field; field = TREE_CHAIN(field))
@@ -72,7 +72,7 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
     if (ri->fieldCount > fieldCapacity)
     {
      fieldCapacity *= 2;
-     ri->fields = xrealloc(ri->fields, fieldCapacity * sizeof(struct FieldInfo*));
+     ri->fields = (struct FieldInfo**)xrealloc(ri->fields, fieldCapacity * sizeof(struct FieldInfo*));
     }
 
     ri->fields[ri->fieldCount - 1] = fi;
@@ -98,10 +98,10 @@ struct RecordInfo* createRecordInfo(const tree type_decl, const tree record_type
 
 struct RecordStorage* createRecordStorage()
 {
-  struct RecordStorage* rs = xmalloc(sizeof(struct RecordStorage));
+  struct RecordStorage* rs = (struct RecordStorage*)xmalloc(sizeof(struct RecordStorage));
   rs->recordCount = 0;
   rs->recordCapacity = 256;
-  rs->records = xmalloc(rs->recordCapacity * sizeof(struct RecordInfo*));
+  rs->records = (struct RecordInfo**)xmalloc(rs->recordCapacity * sizeof(struct RecordInfo*));
 
   return rs;
 }

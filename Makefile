@@ -1,12 +1,28 @@
 CC = gcc
 CXX = g++
 CFLAGS = -Wall -std=gnu99 -O0 -g -march=native
+CXXFLAGS = -Wall -O0 -g -march=native
 PLUGININCLUDE = `$(CC) --print-file-name=plugin`/include
 
-all: recordsize report
+help:
+	@echo "Please specify target that corresponds to your GCC version."
+	@echo "Available targets: gcc45 gcc46 gcc47 gcc48 gcc49"
 
-recordsize:
+clean:
+	rm -fr test{1,2}.h.gch recordsize.so rs-report
+
+gcc45: recordsize_c report
+gcc46: recordsize_c report
+gcc47: recordsize_c report
+gcc48: recordsize_cpp report
+gcc49: recordsize_cpp report
+
+recordsize_c:
 	$(CC) $(CFLAGS) -shared -fpic -I $(PLUGININCLUDE)  -o recordsize.so \
+	rs-plugin-api.c rs-plugin.c rs-common.c
+
+recordsize_cpp:
+	$(CXX) $(CXXFLAGS) -shared -fpic -I $(PLUGININCLUDE)  -o recordsize.so \
 	rs-plugin-api.c rs-plugin.c rs-common.c
 
 report:

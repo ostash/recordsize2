@@ -122,21 +122,21 @@ static void processType(const tree type)
     if (storage->recordCount > storage->recordCapacity)
     {
       storage->recordCapacity *= 2;
-      storage->records = xrealloc(storage->records, storage->recordCapacity * sizeof(struct RecordInfo*));
+      storage->records = (struct RecordInfo**)xrealloc(storage->records, storage->recordCapacity * sizeof(struct RecordInfo*));
     }
 
     storage->records[storage->recordCount - 1] = ri;
   }
 }
 
-static void processTemplate(const tree template)
+static void processTemplate(const tree templateTree)
 {
   // We are not interested in anything except class templates
-  if (TREE_CODE(TREE_TYPE(template)) != RECORD_TYPE)
+  if (TREE_CODE(TREE_TYPE(templateTree)) != RECORD_TYPE)
    return;
 
   // TEMPLATE_DECL maintains chain of its instantiations
-  for (tree instance = DECL_TEMPLATE_INSTANTIATIONS(template); instance; instance = TREE_CHAIN(instance))
+  for (tree instance = DECL_TEMPLATE_INSTANTIATIONS(templateTree); instance; instance = TREE_CHAIN(instance))
   {
     // instance is tree_list
     // TREE_VALUE(instance) is instantiated/specialized record_type
@@ -249,6 +249,36 @@ int plugin_init(struct plugin_name_args* info, struct plugin_gcc_version* ver)
 
   register_callback(info->base_name, PLUGIN_INFO, NULL, &recordsize_plugin_info);
   register_callback(info->base_name, PLUGIN_OVERRIDE_GATE, &recordsize_override_gate, NULL);
+  register_callback(info->base_name, PLUGIN_FINISH_UNIT, &recordsize_override_gate, NULL);
 
   return 0;
 }
+
+#ifndef __cplusplus
+expanded_location expand_location(source_location arg) __attribute__ ((weak));
+expanded_location _Z15expand_locationj(source_location arg) __attribute__((weak));
+
+expanded_location expand_location(source_location arg)
+{
+  return _Z15expand_locationj(arg);
+}
+
+expanded_location _Z15expand_locationj(source_location arg)
+{
+  return expand_location(arg);
+}
+
+const char* type_as_string(tree t, int i) __attribute__ ((weak));
+const char* _Z14type_as_stringP9tree_nodei(tree, int) __attribute__ ((weak));
+
+const char* type_as_string(tree t, int i)
+{
+  return _Z14type_as_stringP9tree_nodei(t, i);
+}
+
+const char* _Z14type_as_stringP9tree_nodei(tree t, int i)
+{
+  return type_as_string(t, i);
+}
+
+#endif
