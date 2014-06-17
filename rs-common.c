@@ -207,17 +207,21 @@ void printRecordInfo(FILE* file, const struct RecordInfo* ri, bool printLayout)
   for (size_t i = 0; i < ri->fieldCount; i++)
   {
     struct FieldInfo* fi = ri->fields[i];
-    size_t offset = fi->offset;
-    size_t size = fi->size;
-    size_t align = fi->align;
+    const size_t offset = fi->offset / 8;
+    const size_t size = fi->size / 8 ;
+    const size_t align = fi->align / 8;
     if (!fi->isBitField)
+      fprintf(file, "%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
+        offset, colWidths[3] ,size, colWidths[4], align, colWidths[5], fi->isSpecial, colWidths[6], fi->isBitField);
+    else
     {
-      offset /= 8;
-      size /= 8;
-      align /= 8;
+      const size_t bOffset = fi->offset % 8;
+      const size_t bSize = fi->size % 8;
+      const size_t bAlign = fi->align % 8;
+      fprintf(file, "%*zu|%-*s|%*zu.%zu|%*zu.%zu|%*zu.%zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2] - 2,
+        offset, bOffset, colWidths[3] - 2, size, bSize, colWidths[4] - 2, align, bAlign, colWidths[5], fi->isSpecial,
+        colWidths[6], fi->isBitField);
     }
-    fprintf(file, "%*zu|%-*s|%*zu|%*zu|%*zu|%*d|%*d\n", colWidths[0], i, colWidths[1], fi->name, colWidths[2],
-      offset, colWidths[3] ,size, colWidths[4], align, colWidths[5], fi->isSpecial, colWidths[6], fi->isBitField);
   }
 
 }
